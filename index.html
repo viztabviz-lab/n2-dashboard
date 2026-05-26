@@ -3615,7 +3615,7 @@ function renderAnalyst(){
 
 // ── 뉴스: Google News RSS + Claude API 연동 ─────────────────
 const _RSS_URL = 'https://news.google.com/rss/search?q=NH%ED%88%AC%EC%9E%90%EC%A6%9D%EA%B6%8C+005940&hl=ko&gl=KR&ceid=KR%3Ako';
-const _RSS_API = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(_RSS_URL)}&count=25&order_by=pubDate&order_dir=desc`;
+const _RSS_API = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(_RSS_URL)}&count=25`;
 const _CLAUDE  = 'https://api.anthropic.com/v1/messages';
 
 let _newsFetched = false;
