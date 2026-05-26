@@ -3537,41 +3537,127 @@ function renderAnalyst(){
     </tbody>`;
 }
 
-// ── 뉴스: 서버 베이크 데이터 렌더링 (삼성 대시보드 방식) ──────
-// update_data.py (GitHub Actions) 가 매일 RSS + Claude API 처리 후 DASHBOARD_DATA에 베이크
-// 브라우저는 내장 데이터만 렌더링 — 별도 API 호출 없음
+// ── 뉴스: 서버 베이크 + RSS 자동 보완 ─────────────────────────
+// 1순위: update_data.py (GitHub Actions) 가 베이크한 데이터 (30건)
+// 2순위: 베이크 데이터 부족 시 → 브라우저에서 Google News RSS 직접 수집
 
-function renderNews() {
+const _RSS_URL = 'https://news.google.com/rss/search?q=NH투자증권+005940&hl=ko&gl=KR&ceid=KR:ko';
+
+function _cleanTitle(t) { return (t||'').replace(/\s*[-–|]\s*[^-–|\s][^-–|]{0,20}$/, '').trim(); }
+function _cleanHtml(h)  { return (h||'').replace(/<[^>]+>/g,'').replace(/&[a-z#0-9]+;/gi,' ').replace(/\s+/g,' ').trim(); }
+function _parseDate(pubDate) {
+  try { const d=new Date(pubDate); if(!isNaN(d.getTime())) return d.toISOString().slice(0,10); } catch(e){}
+  return (pubDate||'').slice(0,10);
+}
+function _category(t) {
+  const map=[
+    [['실적','순이익','영업이익','매출','1Q','2Q','3Q','4Q','분기'],'실적·이익'],
+    [['목표주가','상향','하향','매수','중립','매도','투자의견','리포트'],'주가전망'],
+    [['거래대금','증권업','시황','업황','거래량','코스피','코스닥'],'업황·시황'],
+    [['금리','채권','금통위','한국은행','기준금리'],'금리·채권'],
+    [['IMA','발행어음','상품','서비스','출시'],'상품·서비스'],
+    [['배당','자사주','주주환원'],'주주환원'],
+    [['인사','대표','CEO','부사장','사장','임원'],'인사·조직'],
+    [['IPO','상장','공모','청약'],'IPO·공모'],
+  ];
+  for(const[kws,cat]of map){if(kws.some(k=>t.includes(k)))return cat;}
+  return '증권·금융';
+}
+function _sentiment(t){
+  const P=['상향','급등','호조','최고','증가','성장','개선','매수','상승','신고가','강세','돌파'];
+  const N=['하향','급락','부진','하락','감소','우려','악화','손실','적자','약세'];
+  return P.some(w=>t.includes(w))?'positive':N.some(w=>t.includes(w))?'negative':'neutral';
+}
+function _parseRSSXML(xml){
+  const doc=new DOMParser().parseFromString(xml,'text/xml');
+  if(doc.querySelector('parsererror'))throw new Error('XML 파싱 실패');
+  return [...doc.querySelectorAll('item')].map(el=>{
+    const g=tag=>el.querySelector(tag)?.textContent?.trim()||'';
+    return {title:g('title'),link:g('link'),description:g('description'),pubDate:g('pubDate')};
+  });
+}
+function _toItems(raw){
+  return raw.map(item=>({
+    title:    _cleanTitle(item.title||''),
+    link:     item.link||'#',
+    desc:     _cleanHtml(item.description||'').slice(0,130),
+    date:     _parseDate(item.pubDate||item.pubDate||''),
+    category: _category(item.title||''),
+    sentiment:_sentiment(item.title||'')
+  }));
+}
+function _newsCardHTML(item,idx){
+  return `<a href="${item.link}" target="_blank" rel="noopener" style="text-decoration:none;color:inherit">
+    <div class="news-card">
+      <div class="news-cat-dot ${item.sentiment}"></div>
+      <div class="news-body">
+        <div class="news-cat-badge">${String(idx+1).padStart(2,'0')} ${item.category}</div>
+        <div class="news-title">${item.title}</div>
+        <div class="news-desc">${item.desc}</div>
+        <div class="news-meta">${item.date}</div>
+      </div>
+      <div class="news-link-icon">↗ 원문 보기</div>
+    </div>
+  </a>`;
+}
+function _setStatus(html){ const el=document.getElementById('news-status'); if(el)el.innerHTML=html; }
+
+async function _fetchRSSItems(){
+  const enc = encodeURIComponent(_RSS_URL);
+  // ① rss2json
+  try{
+    const r=await fetch(`https://api.rss2json.com/v1/api.json?rss_url=${enc}&count=30`,{signal:AbortSignal.timeout(8000)});
+    if(!r.ok)throw new Error(`rss2json ${r.status}`);
+    const d=await r.json();
+    if(d.status!=='ok'||!d.items?.length)throw new Error('빈응답');
+    return _toItems(d.items).slice(0,30);
+  }catch(e){console.warn('[rss2json]',e.message);}
+  // ② corsproxy
+  try{
+    const r=await fetch(`https://corsproxy.io/?url=${enc}`,{signal:AbortSignal.timeout(8000)});
+    if(!r.ok)throw new Error(`corsproxy ${r.status}`);
+    return _toItems(_parseRSSXML(await r.text())).slice(0,30);
+  }catch(e){console.warn('[corsproxy]',e.message);}
+  // ③ allorigins
+  try{
+    const r=await fetch(`https://api.allorigins.win/raw?url=${enc}`,{signal:AbortSignal.timeout(10000)});
+    if(!r.ok)throw new Error(`allorigins ${r.status}`);
+    return _toItems(_parseRSSXML(await r.text())).slice(0,30);
+  }catch(e){console.warn('[allorigins]',e.message);}
+  throw new Error('모든 프록시 실패');
+}
+
+async function renderNews() {
   const n      = D.news;
   const sumEl  = document.getElementById('news-sum');
   const grid   = document.getElementById('news-grid');
-  const status = document.getElementById('news-status');
 
-  if (!n || !(n.items || []).length) {
-    if (grid) grid.innerHTML = '<div style="padding:40px;text-align:center;color:#7A96A8">뉴스 데이터가 없습니다.<br>GitHub Actions를 실행하면 최신 뉴스가 채워집니다.</div>';
+  // 내장 데이터가 충분하면 (GitHub Actions 실행 후) 바로 렌더
+  if ((n?.items||[]).length >= 10) {
+    if(n.summary&&sumEl) sumEl.textContent=n.summary;
+    _setStatus(`<span style="color:#009B77">●</span> Google News · Claude AI 분석 · ${n.items.length}건 · ${D.updated_at} 기준`);
+    if(grid) grid.innerHTML=n.items.map((item,i)=>_newsCardHTML(item,i)).join('');
     return;
   }
 
-  if (n.summary && sumEl) sumEl.textContent = n.summary;
+  // 내장 데이터 부족 → RSS 실시간 수집
+  if(grid) grid.innerHTML=`<div class="news-loading"><span class="spin">⟳</span> Google News에서 NH투자증권 최신 뉴스 30건을 가져오는 중...</div>`;
+  if(sumEl) sumEl.textContent='';
+  _setStatus('');
 
-  if (status) status.innerHTML = `
-    <span style="color:#009B77">●</span>
-    Google News · Claude AI 분석 · ${n.items.length}건 · ${D.updated_at} 기준
-  `;
-
-  if (grid) grid.innerHTML = n.items.map((item, i) => `
-    <a href="${item.link || '#'}" target="_blank" rel="noopener" style="text-decoration:none;color:inherit">
-      <div class="news-card">
-        <div class="news-cat-dot ${item.sentiment || 'neutral'}"></div>
-        <div class="news-body">
-          <div class="news-cat-badge">${String(i+1).padStart(2,'0')} ${item.category || '기타'}</div>
-          <div class="news-title">${item.title || ''}</div>
-          <div class="news-desc">${item.desc || ''}</div>
-          <div class="news-meta">${item.date || ''}</div>
-        </div>
-        <div class="news-link-icon">↗ 원문 보기</div>
-      </div>
-    </a>`).join('');
+  try{
+    const items=await _fetchRSSItems();
+    if(n?.summary&&sumEl) sumEl.textContent=n.summary;
+    _setStatus(`<span style="color:#00B4D8">●</span> Google News 실시간 · ${items.length}건 · ${new Date().toLocaleTimeString('ko-KR')} 기준`);
+    if(grid) grid.innerHTML=items.map((item,i)=>_newsCardHTML(item,i)).join('');
+  }catch(e){
+    // RSS도 실패 → 내장 데이터 표시
+    if(n?.summary&&sumEl) sumEl.textContent=n.summary;
+    _setStatus(`<span style="color:var(--neu)">●</span> RSS 로드 실패 — 내장 데이터 ${(n?.items||[]).length}건 표시`);
+    if(grid) grid.innerHTML=(n?.items||[]).length
+      ? (n.items.map((item,i)=>_newsCardHTML(item,i)).join(''))
+      : `<div class="news-loading">뉴스를 불러오지 못했습니다. GitHub Actions를 실행해 주세요.</div>`;
+  }
 }
 
 // ── 탭 전환 ────────────────────────────────────────────────────
