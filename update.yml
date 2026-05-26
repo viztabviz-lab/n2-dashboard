@@ -1,0 +1,41 @@
+name: NH투자증권 Dashboard Update
+
+on:
+  schedule:
+    # 평일 오후 4:30 KST (UTC 07:30)
+    - cron: '30 7 * * 1-5'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  update-dashboard:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v4
+
+      - name: 🐍 Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: 📦 Install dependencies
+        run: |
+          pip install --upgrade pip
+          pip install pykrx anthropic
+
+      - name: 📊 Run data update script
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: python update_data.py
+
+      - name: 💾 Commit & Push updated index.html
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git add index.html
+          git diff --staged --quiet || git commit -m "📈 Auto-update: NH투자증권 $(date '+%Y-%m-%d %H:%M KST')"
+          git push

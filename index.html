@@ -1,0 +1,3900 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NH투자증권 주식 리포트 2026</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700;900&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+:root{
+  --nh:#0D2B3E; --nh2:#1A4560; --nh3:#2E6A8A;
+  --accent:#00B4D8; --gold:#F4A72A;
+  --pos:#D42020; --neg:#1A5FD4; --neu:#8899AA;
+  --bg:#F0F4F8; --card:#fff;
+  --t1:#0D2B3E; --t2:#3A5A70; --t3:#7A96A8;
+  --border:#D6E4ED;
+  --sh: 0 2px 16px rgba(13,43,62,.09);
+  --sh2:0 6px 32px rgba(13,43,62,.13);
+  --r:14px; --rsm:8px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--t1);min-height:100vh}
+a{color:inherit;text-decoration:none}
+
+/* ── 히어로 ── */
+.hero{
+  background:linear-gradient(135deg,var(--nh) 0%,var(--nh2) 55%,var(--nh3) 100%);
+  color:#fff; padding:24px 0 0; position:relative; overflow:hidden;
+}
+.hero::before{
+  content:'';position:absolute;inset:0;
+  background:url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+}
+.hero-inner{max-width:1160px;margin:0 auto;padding:0 32px;position:relative}
+.hero-top{display:flex;justify-content:space-between;align-items:center;gap:32px}
+.brand-block{flex:1;min-width:0}
+.brand-badge{
+  display:inline-flex;align-items:center;gap:8px;flex-wrap:wrap;
+  background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);
+  border-radius:20px;padding:5px 14px;font-size:11px;
+  font-family:'Noto Sans KR',sans-serif;letter-spacing:.04em;
+  color:rgba(255,255,255,.7);margin-bottom:12px;
+}
+.badge-live{width:7px;height:7px;background:var(--accent);border-radius:50%;animation:pulse 2s infinite;flex-shrink:0}
+.badge-sep{color:rgba(255,255,255,.3);margin:0 4px}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+.company-name{font-size:32px;font-weight:900;letter-spacing:-1px;line-height:1.15}
+/* 현재가 - 타이틀 바로 아래 인라인 */
+.price-inline{display:flex;align-items:center;gap:12px;margin:10px 0 6px;flex-wrap:wrap}
+.price-now{font-family:'Noto Sans KR',sans-serif;font-size:28px;font-weight:700;letter-spacing:-0.5px;line-height:1}
+.price-unit{font-size:15px;font-weight:400;opacity:.75;margin-left:1px}
+.price-chg{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:5px 14px;border-radius:20px;
+  font-family:'Noto Sans KR',sans-serif;font-size:13px;font-weight:700;
+}
+.price-chg.up{background:rgba(212,32,32,.28);color:#FF8080}
+.price-chg.dn{background:rgba(26,95,212,.28);color:#80AAFF}
+.price-chg.fl{background:rgba(255,255,255,.12);color:rgba(255,255,255,.65)}
+.company-sub{font-size:12.5px;color:rgba(255,255,255,.5);font-weight:300}
+
+
+
+/* ── 지표 스트립 (하단 보조) ── */
+.metrics-strip{
+  display:flex;gap:0;margin-top:20px;
+  border-top:1px solid rgba(255,255,255,.1);
+}
+.metric{
+  flex:1;padding:12px 16px;border-right:1px solid rgba(255,255,255,.08);
+  text-align:center;
+}
+.metric:last-child{border-right:none}
+.metric-label{font-size:10px;color:rgba(255,255,255,.45);letter-spacing:.06em;text-transform:uppercase;margin-bottom:3px}
+.metric-value{font-family:'Noto Sans KR',sans-serif;font-size:14px;font-weight:600}
+
+/* ── 탭 바 ── */
+.tabs-bar{background:var(--nh);position:sticky;top:0;z-index:100;box-shadow:0 2px 12px rgba(0,0,0,.2)}
+.tabs-inner{max-width:1160px;margin:0 auto;padding:0 32px;display:flex;gap:4px}
+.tab-btn{
+  padding:13px 24px;border:none;background:transparent;
+  color:rgba(255,255,255,.55);cursor:pointer;
+  font-family:'Noto Sans KR',sans-serif;font-size:13px;font-weight:500;
+  border-bottom:3px solid transparent;transition:all .2s;white-space:nowrap;
+}
+.tab-btn:hover{color:#fff}
+.tab-btn.active{color:#fff;font-weight:700;border-bottom-color:var(--accent)}
+
+/* ── 업데이트 바 (히어로로 통합되어 숨김) ── */
+.upd-bar{display:none}
+
+/* ── 메인 ── */
+.main{max-width:1160px;margin:0 auto;padding:28px 32px 60px}
+.tab-panel{display:none}.tab-panel.active{display:block}
+
+/* ── 섹션 구분선 ── */
+.section-header{
+  display:flex;align-items:center;gap:10px;
+  margin-bottom:16px;padding-bottom:12px;
+  border-bottom:2px solid var(--border);
+}
+.section-title{font-size:15px;font-weight:700;color:var(--t1)}
+.section-desc{font-size:12px;color:var(--t3);margin-left:auto}
+
+/* ── 카드 ── */
+.card{background:var(--card);border-radius:var(--r);border:1px solid var(--border);box-shadow:var(--sh);padding:24px 28px;margin-bottom:20px}
+.card-sm{background:var(--card);border-radius:var(--rsm);border:1px solid var(--border);box-shadow:var(--sh);padding:16px 20px}
+
+/* ── 차트 컨트롤 ── */
+.chart-ctrl{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px}
+.ctrl-left{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.ctrl-right{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.btn-group{display:flex;background:var(--bg);border:1px solid var(--border);border-radius:var(--rsm);padding:3px;gap:2px}
+.btn-g{padding:5px 14px;border:none;background:transparent;color:var(--t3);font-size:12px;font-family:'Noto Sans KR',sans-serif;border-radius:6px;cursor:pointer;transition:all .15s;font-weight:500}
+.btn-g:hover{color:var(--t1)}
+.btn-g.active{background:var(--nh);color:#fff}
+.btn-gk{padding:5px 14px;border:none;background:transparent;color:var(--t3);font-size:12px;font-family:'Noto Sans KR',sans-serif;border-radius:6px;cursor:pointer;transition:all .15s;font-weight:500}
+.btn-gk:hover{color:var(--t1)}
+.btn-gk.active{background:var(--nh);color:#fff}
+
+/* ── 차트 래퍼 ── */
+.chart-wrap{position:relative;height:320px}
+.chart-wrap canvas{position:absolute;top:0;left:0;width:100%;height:100%}
+.chart-wrap-md{position:relative;height:240px}
+.chart-wrap-md canvas{position:absolute;top:0;left:0;width:100%;height:100%}
+.chart-wrap-sm{position:relative;height:160px}
+.chart-wrap-sm canvas{position:absolute;top:0;left:0;width:100%;height:100%}
+
+/* ── 하이라이트 카드 ── */
+.highlights{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:20px}
+@media(max-width:860px){.highlights{grid-template-columns:repeat(2,1fr)}}
+.hl-card{background:var(--card);border:1px solid var(--border);border-radius:var(--rsm);padding:16px 18px;position:relative;overflow:hidden}
+.hl-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--nh)}
+.hl-label{font-size:10px;color:var(--t3);font-weight:600;letter-spacing:.05em;text-transform:uppercase;margin-bottom:6px}
+.hl-value{font-family:'Noto Sans KR',sans-serif;font-size:21px;font-weight:500;color:var(--t1);line-height:1}
+.hl-unit{font-size:12px;font-weight:400;color:var(--t2);margin-left:2px}
+.hl-sub{font-size:11px;color:var(--t3);margin-top:4px}
+.hl-badge{display:inline-flex;align-items:center;gap:4px;background:#EEF9F4;color:var(--pos);padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600;margin-top:5px}
+.hl-badge.neg{background:#FFF2F2;color:var(--neg)}
+
+/* ── 재무 그리드 ── */
+.fin-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+@media(max-width:720px){.fin-grid{grid-template-columns:1fr}}
+
+/* ── 테이블 ── */
+.tbl{width:100%;border-collapse:collapse;font-size:13px}
+.tbl th{font-size:10.5px;font-weight:600;color:var(--t3);text-transform:uppercase;letter-spacing:.05em;padding:9px 10px;text-align:left;border-bottom:1px solid var(--border);background:#F8FAFC}
+.tbl td{padding:10px 10px;border-bottom:1px solid #F0F4F8;color:var(--t2)}
+.tbl td.num{text-align:right;font-family:'Noto Sans KR',sans-serif;font-weight:500;color:var(--t1)}
+.tbl tr:last-child td{border-bottom:none}
+.tbl tr:hover td{background:#FAFCFF}
+
+/* ── 경쟁사 카드 ── */
+.comp-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;margin-bottom:20px}
+@media(max-width:640px){.comp-grid{grid-template-columns:1fr}}
+.comp-card{border:2px solid var(--border);border-radius:var(--r);padding:18px 20px;background:var(--card);transition:all .2s}
+.comp-card:hover{border-color:var(--nh);box-shadow:var(--sh)}
+.comp-card.self{border-color:var(--nh);background:linear-gradient(135deg,#EEF6FF,#F0F8FF)}
+.comp-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px}
+.comp-name{font-size:15px;font-weight:700}
+.comp-ticker{font-size:11px;color:var(--t3);font-family:'Noto Sans KR',sans-serif;margin-top:2px}
+.comp-price-block{text-align:right}
+.comp-price{font-family:'Noto Sans KR',sans-serif;font-size:20px;font-weight:500}
+.comp-chg{font-size:12px;font-family:'Noto Sans KR',sans-serif;font-weight:600;padding:2px 8px;border-radius:10px}
+.comp-chg.up{color:#D42020;background:#FFF0F0}.comp-chg.dn{color:#1A5FD4;background:#EFF4FF}
+.comp-metrics{display:flex;gap:16px;flex-wrap:wrap}
+.cm-item{font-size:11.5px;color:var(--t3)}
+.cm-item span{color:var(--t1);font-weight:600;font-family:'Noto Sans KR',sans-serif}
+
+/* ── 섹터 바 ── */
+.sector-row{margin-bottom:14px}
+.sector-info{display:flex;justify-content:space-between;margin-bottom:5px;font-size:12.5px}
+.sector-name{color:var(--t2);font-weight:500}
+.sector-val{color:var(--t1);font-family:'Noto Sans KR',sans-serif;font-weight:600}
+.bar-bg{height:8px;background:var(--bg);border-radius:4px;overflow:hidden;border:1px solid var(--border)}
+.bar-fill{height:100%;border-radius:4px;background:linear-gradient(90deg,var(--nh),var(--accent));transition:width .9s ease}
+
+/* ── 애널리스트 ── */
+.consensus-block{display:flex;align-items:center;gap:28px;margin-bottom:24px;flex-wrap:wrap}
+.cons-badge{
+  width:96px;height:96px;border-radius:50%;
+  background:linear-gradient(135deg,var(--nh),var(--accent));
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  color:#fff;box-shadow:0 4px 20px rgba(13,43,62,.3);
+}
+.cons-label{font-size:10px;letter-spacing:.06em;opacity:.8}
+.cons-text{font-size:18px;font-weight:800}
+.cons-stars{font-size:11px;margin-top:1px;color:var(--gold)}
+.cons-stats{display:flex;gap:20px;flex-wrap:wrap}
+.cs-item{text-align:center}
+.cs-val{font-family:'Noto Sans KR',sans-serif;font-size:22px;font-weight:700}
+.cs-lbl{font-size:11px;color:var(--t3);margin-top:2px}
+.target-bar{margin:20px 0}
+.tbar-track{position:relative;height:10px;background:var(--bg);border-radius:5px;border:1px solid var(--border);margin:8px 0}
+.tbar-fill{position:absolute;height:100%;border-radius:5px;background:linear-gradient(90deg,var(--neg),var(--gold),var(--pos))}
+.tbar-marker{position:absolute;top:-4px;width:18px;height:18px;border-radius:50%;background:#fff;border:3px solid var(--nh);transform:translateX(-50%)}
+.tbar-labels{display:flex;justify-content:space-between;font-size:11px;font-family:'Noto Sans KR',sans-serif;color:var(--t3)}
+.tbar-current{position:absolute;top:-26px;transform:translateX(-50%);background:var(--nh);color:#fff;padding:2px 8px;border-radius:8px;font-size:10px;font-family:'Noto Sans KR',sans-serif;white-space:nowrap}
+
+/* ── 뉴스 ── */
+.news-summary-box{
+  background:linear-gradient(135deg,#EEF6FF,#F0F8FF);
+  border-left:4px solid var(--nh);border-radius:0 var(--rsm) var(--rsm) 0;
+  padding:16px 20px;font-size:13.5px;line-height:1.75;color:var(--t2);
+  margin-bottom:16px;
+}
+.news-summary-box:empty{display:none}
+/* Claude API 연동 바 */
+.news-ai-bar{
+  display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+  padding:10px 16px;margin-bottom:12px;
+  background:linear-gradient(135deg,rgba(13,43,62,.05),rgba(0,180,216,.04));
+  border:1px solid var(--border);border-radius:var(--rsm);
+}
+.ai-status{display:flex;align-items:center;gap:7px;font-size:12.5px;color:var(--t2);flex:1}
+.ai-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;transition:background .3s}
+.ai-dot.on{background:#009B77;box-shadow:0 0 6px rgba(0,155,119,.5)}
+.ai-dot.off{background:var(--neu)}
+.ai-dot.loading{background:var(--gold);animation:pulse 1s infinite}
+.ai-dot.error{background:var(--neg)}
+.ai-key-btn{
+  display:inline-flex;align-items:center;gap:5px;
+  padding:5px 12px;border:1px solid var(--border);
+  background:var(--card);color:var(--t2);border-radius:16px;
+  cursor:pointer;font-size:12px;font-family:'Noto Sans KR',sans-serif;
+  font-weight:500;transition:all .2s;
+}
+.ai-key-btn:hover{border-color:var(--nh);color:var(--nh);background:#EEF6FF}
+/* API 키 입력 섹션 */
+.api-key-section{
+  background:var(--bg);border:1px solid var(--border);
+  border-radius:var(--rsm);padding:14px 16px;margin-bottom:14px;
+  animation:fadeIn .2s ease;
+}
+@keyframes fadeIn{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:none}}
+.api-key-inner{display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap}
+.api-key-field{
+  flex:1;min-width:180px;
+  padding:8px 12px;border:1px solid var(--border);
+  border-radius:var(--rsm);font-size:12.5px;
+  font-family:'Noto Sans KR',sans-serif;color:var(--t1);
+  background:#fff;outline:none;transition:border-color .2s;
+}
+.api-key-field:focus{border-color:var(--nh);box-shadow:0 0 0 3px rgba(13,43,62,.08)}
+.api-key-save{
+  padding:8px 16px;background:var(--nh);color:#fff;
+  border:none;border-radius:var(--rsm);cursor:pointer;
+  font-size:12.5px;font-family:'Noto Sans KR',sans-serif;font-weight:600;
+  white-space:nowrap;transition:opacity .2s;
+}
+.api-key-save:hover{opacity:.85}
+.api-key-clear{
+  padding:8px 12px;background:transparent;color:var(--t3);
+  border:1px solid var(--border);border-radius:var(--rsm);cursor:pointer;
+  font-size:12px;font-family:'Noto Sans KR',sans-serif;transition:all .2s;
+}
+.api-key-clear:hover{border-color:var(--neg);color:var(--neg)}
+.api-key-note{font-size:11px;color:var(--t3);line-height:1.7}
+/* 상태 바 */
+.news-status{
+  display:flex;align-items:center;gap:7px;
+  font-size:12px;color:var(--t3);margin-bottom:14px;
+  min-height:18px;
+}
+.news-refresh-btn{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:6px 14px;border:1px solid var(--border);
+  background:var(--card);color:var(--t2);border-radius:20px;
+  cursor:pointer;font-size:12px;font-family:'Noto Sans KR',sans-serif;
+  font-weight:500;transition:all .2s;white-space:nowrap;margin-left:auto;
+}
+.news-refresh-btn:hover{border-color:var(--nh);color:var(--nh);background:#EEF6FF}
+.news-refresh-btn:disabled{opacity:.45;cursor:not-allowed}
+.news-grid{display:flex;flex-direction:column;gap:10px}
+.news-loading{
+  display:flex;align-items:center;justify-content:center;
+  gap:12px;padding:48px 20px;color:var(--t3);font-size:13.5px;
+  border:1px dashed var(--border);border-radius:var(--rsm);
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+.spin{display:inline-block;animation:spin .9s linear infinite;font-size:18px}
+.news-card{
+  display:flex;gap:14px;padding:14px 16px;
+  border:1px solid var(--border);border-radius:var(--rsm);
+  background:var(--bg);transition:all .15s;cursor:pointer;
+}
+.news-card:hover{border-color:var(--nh);background:#fff;box-shadow:var(--sh)}
+.news-cat-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;margin-top:5px}
+.news-cat-dot.positive{background:var(--pos)}.news-cat-dot.negative{background:var(--neg)}.news-cat-dot.neutral{background:var(--neu)}
+.news-body{flex:1;min-width:0}
+.news-cat-badge{display:inline-block;font-size:10px;font-weight:600;padding:2px 7px;border-radius:6px;background:#E8EFF5;color:var(--t2);margin-bottom:4px;letter-spacing:.03em}
+.news-title{font-size:13px;font-weight:600;color:var(--t1);margin-bottom:3px;line-height:1.4;word-break:keep-all}
+.news-desc{font-size:12px;color:var(--t3);line-height:1.5;word-break:keep-all}
+.news-meta{font-size:11px;color:var(--t3);margin-top:4px;font-family:'Noto Sans KR',sans-serif}
+.news-link-icon{font-size:11px;color:var(--t3);padding:4px 6px;border:1px solid var(--border);border-radius:4px;align-self:flex-start;flex-shrink:0;margin-top:2px;transition:all .15s;white-space:nowrap}
+.news-card:hover .news-link-icon{border-color:var(--nh);color:var(--nh)}
+
+/* ── 면책 ── */
+.disclaimer{font-size:11.5px;color:var(--t3);padding:20px 0;border-top:1px solid var(--border);text-align:center;line-height:1.8;margin-top:20px}
+
+/* ── 반응형 ── */
+@media(max-width:768px){
+  .hero-inner,.tabs-inner,.main{padding-left:16px;padding-right:16px}
+  /* ── 모바일: 히어로 전체 중앙 정렬 ── */
+  .hero-top{flex-direction:column;gap:16px;align-items:center}
+  .brand-block{text-align:center;width:100%}
+  .brand-badge{justify-content:center}
+  .price-inline{justify-content:center}
+  .company-sub{text-align:center}
+  /* 우측 패널: 전체 너비 + 항목 중앙 */
+  .hero-right{display:none}
+  .hr-item{text-align:center}
+  /* 하단 지표 스트립 */
+  .metrics-strip{flex-wrap:wrap}
+  .metric{min-width:33%;text-align:center}
+  /* 폰트 축소 */
+  .company-name{font-size:24px}
+  .price-now{font-size:22px}
+  .price-inline{gap:8px}
+}
+</style>
+</head>
+<body>
+
+<!-- ── 히어로 ── -->
+<div class="hero">
+  <div class="hero-inner">
+    <div class="hero-top">
+      <div class="brand-block">
+        <div class="brand-badge">
+          <span class="badge-live"></span>
+          마지막 업데이트: <span id="upd-label">—</span>
+        </div>
+        <div class="company-name">NH투자증권 주식 리포트</div>
+        <div class="price-inline">
+          <span class="price-now" id="hdr-price">—<span class="price-unit">원</span></span>
+          <span id="hdr-chg" class="price-chg fl">—</span>
+        </div>
+        <div class="company-sub">NH Investment &amp; Securities · 005940.KS · NH투자증권</div>
+      </div>
+    </div>
+    <div class="metrics-strip">
+      <div class="metric"><div class="metric-label">52주 최고</div><div class="metric-value" id="m-52h">—</div></div>
+      <div class="metric"><div class="metric-label">52주 최저</div><div class="metric-value" id="m-52l">—</div></div>
+      <div class="metric"><div class="metric-label">시가총액</div><div class="metric-value" id="m-mc">—</div></div>
+      <div class="metric"><div class="metric-label">EPS (TTM)</div><div class="metric-value" id="m-eps">—</div></div>
+      <div class="metric"><div class="metric-label">배당수익률</div><div class="metric-value" id="m-div">—</div></div>
+      <div class="metric"><div class="metric-label">직원수</div><div class="metric-value" id="m-emp">—</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ── 탭 바 ── -->
+<div class="tabs-bar">
+  <div class="tabs-inner">
+    <button class="tab-btn active" onclick="switchTab('chart',this)">📈 주가 차트</button>
+    <button class="tab-btn" onclick="switchTab('fin',this)">💹 재무 지표</button>
+    <button class="tab-btn" onclick="switchTab('comp',this)">⚔️ 경쟁사 비교</button>
+    <button class="tab-btn" onclick="switchTab('analyst',this)">🎯 애널리스트 의견</button>
+    <button class="tab-btn" onclick="switchTab('news',this)">📰 최근 뉴스·이슈</button>
+  </div>
+</div>
+<div class="upd-bar"><span class="upd-dot"></span><span id="upd-label">—</span></div>
+
+<!-- ── 메인 ── -->
+<div class="main">
+
+  <!-- ══ 주가 차트 ══ -->
+  <div class="tab-panel active" id="tab-chart">
+    <div class="card">
+      <div class="chart-ctrl">
+        <div class="ctrl-left">
+          <div class="section-title">주가 추이</div>
+          <div class="btn-group" id="type-btns">
+            <button class="btn-gk active" onclick="setType('line',this)">라인</button>
+            <button class="btn-gk" onclick="setType('candle',this)">캔들</button>
+          </div>
+        </div>
+        <div class="ctrl-right">
+          <div class="btn-group" id="period-btns">
+            <button class="btn-g active" onclick="setPeriod('일',this)">일</button>
+            <button class="btn-g" onclick="setPeriod('주',this)">주</button>
+            <button class="btn-g" onclick="setPeriod('월',this)">월</button>
+            <button class="btn-g" onclick="setPeriod('년',this)">년</button>
+          </div>
+        </div>
+      </div>
+      <div class="chart-wrap" id="main-wrap">
+        <canvas id="main-line"></canvas>
+        <canvas id="main-candle" style="display:none"></canvas>
+      </div>
+    </div>
+    <!-- 분기 하이라이트 -->
+    <div class="section-header" style="margin-top:4px">
+      <div class="section-title">📊 최근 분기 실적 하이라이트</div>
+      <div class="section-desc" id="chart-desc">데이터 기준: 빅스데이터 DX팀 · 강승일 이사</div>
+    </div>
+    <div class="highlights" id="quarterly-hl"></div>
+    <!-- 가격 현황 -->
+    <div class="card" style="margin-top:20px">
+      <div class="section-header"><div class="section-title">당일 가격 현황</div></div>
+      <table class="tbl">
+        <thead><tr><th>항목</th><th style="text-align:right">값</th><th>항목</th><th style="text-align:right">값</th></tr></thead>
+        <tbody>
+          <tr><td>시가</td><td class="num" id="t-open">—</td><td>전일 종가</td><td class="num" id="t-prev">—</td></tr>
+          <tr><td>고가</td><td class="num" id="t-high">—</td><td>시가총액</td><td class="num" id="t-mc">—</td></tr>
+          <tr><td>저가</td><td class="num" id="t-low">—</td><td>거래량</td><td class="num" id="t-vol">—</td></tr>
+          <tr><td>종가</td><td class="num" id="t-close">—</td><td>등락</td><td class="num" id="t-chg">—</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ══ 재무 지표 ══ -->
+  <div class="tab-panel" id="tab-fin">
+    <div class="section-header">
+      <div class="section-title">📊 연간 실적 추이와 분기별 핵심 지표입니다.</div>
+      <div class="section-desc">단위: 조원 / 출처: KIND 공시 기준</div>
+    </div>
+    <div class="fin-grid">
+      <div class="card">
+        <div class="section-title" style="margin-bottom:14px">연간 순영업수익 추이 (조원)</div>
+        <div class="chart-wrap-md"><canvas id="fin-rev"></canvas></div>
+      </div>
+      <div class="card">
+        <div class="section-title" style="margin-bottom:14px">연간 세전이익 추이 (조원)</div>
+        <div class="chart-wrap-md"><canvas id="fin-op"></canvas></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="section-title" style="margin-bottom:14px">분기별 실적 (2025 Q1 ~ 2026 Q1)</div>
+      <table class="tbl" id="fin-qtbl"></table>
+    </div>
+    <div class="card">
+      <div class="section-title" style="margin-bottom:14px">주요 재무 지표 요약</div>
+      <table class="tbl" id="fin-ratios"></table>
+    </div>
+  </div>
+
+  <!-- ══ 경쟁사 비교 ══ -->
+  <div class="tab-panel" id="tab-comp">
+    <div class="section-header">
+      <div class="section-title">⚔️ 국내 대형 증권사 비교</div>
+      <div class="section-desc" id="comp-desc">—</div>
+    </div>
+    <div class="comp-grid" id="comp-cards"></div>
+    <div class="fin-grid">
+      <div class="card">
+        <div class="section-title" style="margin-bottom:14px">시가총액 비교 (조원)</div>
+        <div class="chart-wrap-md"><canvas id="comp-mc-chart"></canvas></div>
+      </div>
+      <div class="card">
+        <div class="section-title" style="margin-bottom:14px">52주 가격 위치</div>
+        <div id="comp-bars"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ 애널리스트 의견 ══ -->
+  <div class="tab-panel" id="tab-analyst">
+    <div class="section-header">
+      <div class="section-title">🎯 투자의견 컨센서스</div>
+    </div>
+    <div class="card">
+      <div class="consensus-block" id="cons-block"></div>
+      <div class="target-bar" id="target-bar"></div>
+    </div>
+    <div class="card">
+      <div class="section-title" style="margin-bottom:14px">증권사별 목표주가 현황</div>
+      <table class="tbl" id="analyst-tbl"></table>
+    </div>
+    <div class="card" style="background:linear-gradient(135deg,#EEF6FF,#F5F9FF)">
+      <div class="section-title" style="margin-bottom:10px">2026년 연간 실적 전망 (컨센서스)</div>
+      <table class="tbl" id="outlook-tbl"></table>
+    </div>
+  </div>
+
+  <!-- ══ 최근 뉴스 ══ -->
+  <div class="tab-panel" id="tab-news">
+    <div class="section-header">
+      <div class="section-title">📰 최신순 정렬 · 카드 클릭 시 원문 기사로 이동합니다.</div>
+      <button class="news-refresh-btn" id="news-refresh-btn" onclick="refreshNews()">
+        <span id="refresh-icon">🔄</span> 최신 뉴스
+      </button>
+    </div>
+
+    <!-- Claude API 연동 바 -->
+    <div class="news-ai-bar">
+      <div class="ai-status">
+        <span class="ai-dot off" id="ai-dot"></span>
+        <span id="ai-status-text">Claude AI 미연동 — RSS 자동 분류 모드</span>
+      </div>
+      <button class="ai-key-btn" onclick="toggleApiKey()" id="ai-key-btn">🔑 Claude API 설정</button>
+    </div>
+    <div class="api-key-section" id="api-key-section" style="display:none">
+      <div class="api-key-inner">
+        <input type="password" id="api-key-input" class="api-key-field"
+          placeholder="sk-ant-api03-... (Anthropic Console에서 발급)">
+        <button class="api-key-save" onclick="saveAndAnalyze()">저장 + AI 분석 실행</button>
+        <button class="api-key-clear" onclick="clearAndReset()">초기화</button>
+      </div>
+      <div class="api-key-note">
+        🔒 API 키는 이 브라우저 세션에만 저장됩니다. 페이지를 닫으면 자동 삭제됩니다.<br>
+        Anthropic Console → API Keys → Create Key에서 발급 가능합니다.
+      </div>
+    </div>
+
+    <div class="news-status" id="news-status"></div>
+    <div class="news-summary-box" id="news-sum"></div>
+    <div class="news-grid" id="news-grid"></div>
+  </div>
+
+  <div class="disclaimer">
+    ⚠️ 본 리포트는 교육·강의 목적으로 제작된 자료이며, 실제 투자 권유가 아닙니다.<br>
+    데이터 출처: KIND 공시, pykrx, Google News, Claude AI (2026년 5월 기준). 투자는 본인의 판단과 책임 하에 이루어져야 합니다.<br>
+    NH투자증권 · 빅스데이터 DX팀 · 강승일 이사
+  </div>
+</div>
+
+<script>
+// ── 데이터 ──────────────────────────────────────────────────
+// __DATA_PLACEHOLDER__
+const DASHBOARD_DATA = {
+  "company": "NH투자증권",
+  "company_en": "NH Investment & Securities",
+  "ticker": "005940",
+  "date": "2026년 05월 25일",
+  "updated_at": "2026-05-25 16:30 KST",
+  "price": {
+    "current": 32850,
+    "change": -550,
+    "change_pct": -1.65,
+    "open": 33100,
+    "high": 33250,
+    "low": 32600,
+    "prev_close": 33400
+  },
+  "volume": 2341800,
+  "market_cap_trillion": 12.07,
+  "week52": {
+    "high": 42600,
+    "low": 12110
+  },
+  "fundamentals": {
+    "eps": 2446,
+    "bps": 30500,
+    "dps": 700,
+    "dividend_yield": 2.13,
+    "pbr": 1.08,
+    "per": 13.4,
+    "roe": 8.0,
+    "employees": 3200
+  },
+  "annual": [
+    {
+      "year": "2022",
+      "revenue": 5.1,
+      "op_income": 0.62,
+      "op_margin": 12.1
+    },
+    {
+      "year": "2023",
+      "revenue": 4.8,
+      "op_income": 0.45,
+      "op_margin": 9.4
+    },
+    {
+      "year": "2024",
+      "revenue": 6.2,
+      "op_income": 0.81,
+      "op_margin": 13.1
+    },
+    {
+      "year": "2025",
+      "revenue": 8.3,
+      "op_income": 1.18,
+      "op_margin": 14.2
+    }
+  ],
+  "quarterly": [
+    {
+      "q": "2025 Q1",
+      "revenue": 1.82,
+      "op_income": 0.23,
+      "yoy": "+12.4%"
+    },
+    {
+      "q": "2025 Q2",
+      "revenue": 1.96,
+      "op_income": 0.27,
+      "yoy": "+18.7%"
+    },
+    {
+      "q": "2025 Q3",
+      "revenue": 2.21,
+      "op_income": 0.33,
+      "yoy": "+31.2%"
+    },
+    {
+      "q": "2025 Q4",
+      "revenue": 2.31,
+      "op_income": 0.35,
+      "yoy": "+28.4%"
+    },
+    {
+      "q": "2026 Q1",
+      "revenue": 2.18,
+      "op_income": 0.48,
+      "yoy": "+108%"
+    }
+  ],
+  "competitors": [
+    {
+      "ticker": "006800",
+      "name": "미래에셋증권",
+      "color": "#E8372C",
+      "shares": 3500000000,
+      "price": 6820,
+      "change_pct": -0.44,
+      "week52_high": 9150,
+      "week52_low": 3880,
+      "mktcap_trillion": 23.9
+    },
+    {
+      "ticker": "016360",
+      "name": "삼성증권",
+      "color": "#0076CE",
+      "shares": 97000000,
+      "price": 51200,
+      "change_pct": 0.98,
+      "week52_high": 62500,
+      "week52_low": 36500,
+      "mktcap_trillion": 5.0
+    },
+    {
+      "ticker": "039490",
+      "name": "키움증권",
+      "color": "#FF6600",
+      "shares": 37000000,
+      "price": 148500,
+      "change_pct": 1.37,
+      "week52_high": 178000,
+      "week52_low": 88000,
+      "mktcap_trillion": 5.5
+    },
+    {
+      "ticker": "030610",
+      "name": "한국금융지주",
+      "color": "#005BAC",
+      "shares": 72000000,
+      "price": 108000,
+      "change_pct": 0.93,
+      "week52_high": 128000,
+      "week52_low": 77500,
+      "mktcap_trillion": 7.8
+    }
+  ],
+  "analyst": {
+    "consensus": "매수",
+    "counts": {
+      "buy": 12,
+      "neutral": 0,
+      "sell": 0
+    },
+    "target_avg": 42500,
+    "target_high": 44000,
+    "target_low": 37000,
+    "firms": [
+      {
+        "firm": "미래에셋증권",
+        "opinion": "매수",
+        "target": 44000,
+        "note": "IMA 출시·ROE 개선 (2026.05.15)"
+      },
+      {
+        "firm": "키움증권",
+        "opinion": "매수",
+        "target": 44000,
+        "note": "목표주가 상향 (2026.04.24)"
+      },
+      {
+        "firm": "삼성증권",
+        "opinion": "매수",
+        "target": 41000,
+        "note": "자본시장 호황 수혜 (2026.04.24)"
+      },
+      {
+        "firm": "NH투자증권(자사)",
+        "opinion": "적극매수",
+        "target": 44000,
+        "note": "자사 추정치"
+      },
+      {
+        "firm": "한국투자증권",
+        "opinion": "매수",
+        "target": 40000,
+        "note": "WM 수익 확대"
+      },
+      {
+        "firm": "신한투자증권",
+        "opinion": "매수",
+        "target": 37000,
+        "note": "보수적 추정"
+      }
+    ]
+  },
+  "chart": {
+    "dates": [
+      "03/03",
+      "03/04",
+      "03/05",
+      "03/06",
+      "03/09",
+      "03/10",
+      "03/11",
+      "03/12",
+      "03/13",
+      "03/16",
+      "03/17",
+      "03/18",
+      "03/19",
+      "03/20",
+      "03/23",
+      "03/24",
+      "03/25",
+      "03/26",
+      "03/27",
+      "03/30",
+      "03/31",
+      "04/01",
+      "04/02",
+      "04/03",
+      "04/06",
+      "04/07",
+      "04/08",
+      "04/09",
+      "04/10",
+      "04/13",
+      "04/14",
+      "04/15",
+      "04/16",
+      "04/17",
+      "04/20",
+      "04/21",
+      "04/22",
+      "04/23",
+      "04/24",
+      "04/27",
+      "04/28",
+      "04/29",
+      "04/30",
+      "05/01",
+      "05/04",
+      "05/05",
+      "05/06",
+      "05/07",
+      "05/08",
+      "05/11",
+      "05/12",
+      "05/13",
+      "05/14",
+      "05/15",
+      "05/18",
+      "05/19",
+      "05/20",
+      "05/21",
+      "05/22",
+      "05/25"
+    ],
+    "prices": [
+      41950,
+      42150,
+      41350,
+      41100,
+      41650,
+      40500,
+      41100,
+      40850,
+      40350,
+      40000,
+      38550,
+      39350,
+      38050,
+      38000,
+      37200,
+      36250,
+      35350,
+      36000,
+      35350,
+      34050,
+      34750,
+      34450,
+      34800,
+      34800,
+      33900,
+      34750,
+      34600,
+      34850,
+      34850,
+      34250,
+      34700,
+      34650,
+      34200,
+      34400,
+      35200,
+      35300,
+      34300,
+      35200,
+      35250,
+      35100,
+      34400,
+      34100,
+      34900,
+      34550,
+      34200,
+      34250,
+      33650,
+      33500,
+      34350,
+      33800,
+      33650,
+      33200,
+      33850,
+      33450,
+      33200,
+      32700,
+      33350,
+      32700,
+      33150,
+      32850
+    ]
+  },
+  "ohlcv": [
+    {
+      "fullDate": "2025-05-26",
+      "d": "05/26",
+      "o": 12400,
+      "h": 12650,
+      "l": 12200,
+      "c": 12550,
+      "v": 2788472
+    },
+    {
+      "fullDate": "2025-05-27",
+      "d": "05/27",
+      "o": 12750,
+      "h": 12800,
+      "l": 12500,
+      "c": 12650,
+      "v": 880452
+    },
+    {
+      "fullDate": "2025-05-28",
+      "d": "05/28",
+      "o": 12500,
+      "h": 12550,
+      "l": 12300,
+      "c": 12500,
+      "v": 2554687
+    },
+    {
+      "fullDate": "2025-05-29",
+      "d": "05/29",
+      "o": 12600,
+      "h": 12850,
+      "l": 12550,
+      "c": 12700,
+      "v": 817546
+    },
+    {
+      "fullDate": "2025-05-30",
+      "d": "05/30",
+      "o": 12950,
+      "h": 13050,
+      "l": 12700,
+      "c": 12900,
+      "v": 3384475
+    },
+    {
+      "fullDate": "2025-06-02",
+      "d": "06/02",
+      "o": 12750,
+      "h": 12950,
+      "l": 12700,
+      "c": 12900,
+      "v": 2430060
+    },
+    {
+      "fullDate": "2025-06-03",
+      "d": "06/03",
+      "o": 13200,
+      "h": 13350,
+      "l": 13100,
+      "c": 13150,
+      "v": 1822042
+    },
+    {
+      "fullDate": "2025-06-04",
+      "d": "06/04",
+      "o": 13200,
+      "h": 13350,
+      "l": 13050,
+      "c": 13100,
+      "v": 2358850
+    },
+    {
+      "fullDate": "2025-06-05",
+      "d": "06/05",
+      "o": 13100,
+      "h": 13300,
+      "l": 12900,
+      "c": 13250,
+      "v": 1015438
+    },
+    {
+      "fullDate": "2025-06-06",
+      "d": "06/06",
+      "o": 12950,
+      "h": 13200,
+      "l": 12850,
+      "c": 13100,
+      "v": 1785046
+    },
+    {
+      "fullDate": "2025-06-09",
+      "d": "06/09",
+      "o": 13250,
+      "h": 13450,
+      "l": 13200,
+      "c": 13350,
+      "v": 2549695
+    },
+    {
+      "fullDate": "2025-06-10",
+      "d": "06/10",
+      "o": 13450,
+      "h": 13750,
+      "l": 13250,
+      "c": 13550,
+      "v": 1824529
+    },
+    {
+      "fullDate": "2025-06-11",
+      "d": "06/11",
+      "o": 13850,
+      "h": 14000,
+      "l": 13700,
+      "c": 13800,
+      "v": 3075700
+    },
+    {
+      "fullDate": "2025-06-12",
+      "d": "06/12",
+      "o": 13650,
+      "h": 13800,
+      "l": 13450,
+      "c": 13750,
+      "v": 1522900
+    },
+    {
+      "fullDate": "2025-06-13",
+      "d": "06/13",
+      "o": 13700,
+      "h": 13900,
+      "l": 13350,
+      "c": 13550,
+      "v": 2569684
+    },
+    {
+      "fullDate": "2025-06-16",
+      "d": "06/16",
+      "o": 14000,
+      "h": 14150,
+      "l": 13650,
+      "c": 13850,
+      "v": 1465894
+    },
+    {
+      "fullDate": "2025-06-17",
+      "d": "06/17",
+      "o": 13900,
+      "h": 14150,
+      "l": 13850,
+      "c": 14000,
+      "v": 1878381
+    },
+    {
+      "fullDate": "2025-06-18",
+      "d": "06/18",
+      "o": 14050,
+      "h": 14200,
+      "l": 13650,
+      "c": 13900,
+      "v": 927214
+    },
+    {
+      "fullDate": "2025-06-19",
+      "d": "06/19",
+      "o": 13950,
+      "h": 14150,
+      "l": 13750,
+      "c": 13900,
+      "v": 971524
+    },
+    {
+      "fullDate": "2025-06-20",
+      "d": "06/20",
+      "o": 14250,
+      "h": 14400,
+      "l": 14050,
+      "c": 14100,
+      "v": 3124105
+    },
+    {
+      "fullDate": "2025-06-23",
+      "d": "06/23",
+      "o": 14150,
+      "h": 14350,
+      "l": 13950,
+      "c": 14100,
+      "v": 1520428
+    },
+    {
+      "fullDate": "2025-06-24",
+      "d": "06/24",
+      "o": 14350,
+      "h": 14650,
+      "l": 14200,
+      "c": 14500,
+      "v": 3375303
+    },
+    {
+      "fullDate": "2025-06-25",
+      "d": "06/25",
+      "o": 14600,
+      "h": 14850,
+      "l": 14400,
+      "c": 14700,
+      "v": 3264095
+    },
+    {
+      "fullDate": "2025-06-26",
+      "d": "06/26",
+      "o": 14700,
+      "h": 14950,
+      "l": 14600,
+      "c": 14750,
+      "v": 1212666
+    },
+    {
+      "fullDate": "2025-06-27",
+      "d": "06/27",
+      "o": 14750,
+      "h": 14950,
+      "l": 14600,
+      "c": 14750,
+      "v": 801544
+    },
+    {
+      "fullDate": "2025-06-30",
+      "d": "06/30",
+      "o": 14550,
+      "h": 14950,
+      "l": 14500,
+      "c": 14700,
+      "v": 3045496
+    },
+    {
+      "fullDate": "2025-07-01",
+      "d": "07/01",
+      "o": 14600,
+      "h": 15000,
+      "l": 14550,
+      "c": 14750,
+      "v": 1031264
+    },
+    {
+      "fullDate": "2025-07-02",
+      "d": "07/02",
+      "o": 14800,
+      "h": 15150,
+      "l": 14700,
+      "c": 14950,
+      "v": 1146656
+    },
+    {
+      "fullDate": "2025-07-03",
+      "d": "07/03",
+      "o": 15000,
+      "h": 15100,
+      "l": 14950,
+      "c": 15000,
+      "v": 1942472
+    },
+    {
+      "fullDate": "2025-07-04",
+      "d": "07/04",
+      "o": 14900,
+      "h": 15100,
+      "l": 14700,
+      "c": 14900,
+      "v": 1641633
+    },
+    {
+      "fullDate": "2025-07-07",
+      "d": "07/07",
+      "o": 15600,
+      "h": 15750,
+      "l": 15400,
+      "c": 15550,
+      "v": 1126711
+    },
+    {
+      "fullDate": "2025-07-08",
+      "d": "07/08",
+      "o": 15150,
+      "h": 15350,
+      "l": 14950,
+      "c": 15200,
+      "v": 1394586
+    },
+    {
+      "fullDate": "2025-07-09",
+      "d": "07/09",
+      "o": 15200,
+      "h": 15300,
+      "l": 15100,
+      "c": 15150,
+      "v": 3121015
+    },
+    {
+      "fullDate": "2025-07-10",
+      "d": "07/10",
+      "o": 15150,
+      "h": 15450,
+      "l": 14950,
+      "c": 15250,
+      "v": 1157241
+    },
+    {
+      "fullDate": "2025-07-11",
+      "d": "07/11",
+      "o": 15850,
+      "h": 16000,
+      "l": 15700,
+      "c": 15800,
+      "v": 2980241
+    },
+    {
+      "fullDate": "2025-07-14",
+      "d": "07/14",
+      "o": 15400,
+      "h": 15700,
+      "l": 15250,
+      "c": 15550,
+      "v": 2060966
+    },
+    {
+      "fullDate": "2025-07-15",
+      "d": "07/15",
+      "o": 16000,
+      "h": 16300,
+      "l": 15700,
+      "c": 15950,
+      "v": 1887077
+    },
+    {
+      "fullDate": "2025-07-16",
+      "d": "07/16",
+      "o": 15950,
+      "h": 16050,
+      "l": 15550,
+      "c": 15800,
+      "v": 2011256
+    },
+    {
+      "fullDate": "2025-07-17",
+      "d": "07/17",
+      "o": 15800,
+      "h": 16000,
+      "l": 15750,
+      "c": 15900,
+      "v": 1996453
+    },
+    {
+      "fullDate": "2025-07-18",
+      "d": "07/18",
+      "o": 16250,
+      "h": 16300,
+      "l": 16200,
+      "c": 16250,
+      "v": 3057274
+    },
+    {
+      "fullDate": "2025-07-21",
+      "d": "07/21",
+      "o": 16700,
+      "h": 16950,
+      "l": 16300,
+      "c": 16550,
+      "v": 2111231
+    },
+    {
+      "fullDate": "2025-07-22",
+      "d": "07/22",
+      "o": 16150,
+      "h": 16250,
+      "l": 15950,
+      "c": 16200,
+      "v": 3460333
+    },
+    {
+      "fullDate": "2025-07-23",
+      "d": "07/23",
+      "o": 16400,
+      "h": 16550,
+      "l": 16100,
+      "c": 16300,
+      "v": 3384757
+    },
+    {
+      "fullDate": "2025-07-24",
+      "d": "07/24",
+      "o": 16800,
+      "h": 17050,
+      "l": 16550,
+      "c": 16800,
+      "v": 1601111
+    },
+    {
+      "fullDate": "2025-07-25",
+      "d": "07/25",
+      "o": 16950,
+      "h": 17150,
+      "l": 16800,
+      "c": 16900,
+      "v": 954346
+    },
+    {
+      "fullDate": "2025-07-28",
+      "d": "07/28",
+      "o": 16900,
+      "h": 17150,
+      "l": 16650,
+      "c": 16900,
+      "v": 3394103
+    },
+    {
+      "fullDate": "2025-07-29",
+      "d": "07/29",
+      "o": 16500,
+      "h": 16850,
+      "l": 16400,
+      "c": 16650,
+      "v": 1435050
+    },
+    {
+      "fullDate": "2025-07-30",
+      "d": "07/30",
+      "o": 16950,
+      "h": 17050,
+      "l": 16650,
+      "c": 16800,
+      "v": 2472330
+    },
+    {
+      "fullDate": "2025-07-31",
+      "d": "07/31",
+      "o": 17100,
+      "h": 17300,
+      "l": 17000,
+      "c": 17050,
+      "v": 1351499
+    },
+    {
+      "fullDate": "2025-08-01",
+      "d": "08/01",
+      "o": 17200,
+      "h": 17450,
+      "l": 17100,
+      "c": 17300,
+      "v": 1609992
+    },
+    {
+      "fullDate": "2025-08-04",
+      "d": "08/04",
+      "o": 17400,
+      "h": 17450,
+      "l": 17100,
+      "c": 17300,
+      "v": 3495826
+    },
+    {
+      "fullDate": "2025-08-05",
+      "d": "08/05",
+      "o": 17600,
+      "h": 17900,
+      "l": 17350,
+      "c": 17800,
+      "v": 3319800
+    },
+    {
+      "fullDate": "2025-08-06",
+      "d": "08/06",
+      "o": 17950,
+      "h": 18100,
+      "l": 17500,
+      "c": 17800,
+      "v": 3051111
+    },
+    {
+      "fullDate": "2025-08-07",
+      "d": "08/07",
+      "o": 17850,
+      "h": 18150,
+      "l": 17650,
+      "c": 17800,
+      "v": 821122
+    },
+    {
+      "fullDate": "2025-08-08",
+      "d": "08/08",
+      "o": 17850,
+      "h": 18200,
+      "l": 17800,
+      "c": 17950,
+      "v": 1162586
+    },
+    {
+      "fullDate": "2025-08-11",
+      "d": "08/11",
+      "o": 17600,
+      "h": 17950,
+      "l": 17350,
+      "c": 17750,
+      "v": 2433040
+    },
+    {
+      "fullDate": "2025-08-12",
+      "d": "08/12",
+      "o": 18050,
+      "h": 18400,
+      "l": 17800,
+      "c": 18200,
+      "v": 2119036
+    },
+    {
+      "fullDate": "2025-08-13",
+      "d": "08/13",
+      "o": 18550,
+      "h": 18600,
+      "l": 18200,
+      "c": 18400,
+      "v": 1547036
+    },
+    {
+      "fullDate": "2025-08-14",
+      "d": "08/14",
+      "o": 18000,
+      "h": 18200,
+      "l": 17650,
+      "c": 17900,
+      "v": 2801323
+    },
+    {
+      "fullDate": "2025-08-15",
+      "d": "08/15",
+      "o": 18300,
+      "h": 18400,
+      "l": 18000,
+      "c": 18350,
+      "v": 3184387
+    },
+    {
+      "fullDate": "2025-08-18",
+      "d": "08/18",
+      "o": 18800,
+      "h": 19100,
+      "l": 18650,
+      "c": 18800,
+      "v": 1199853
+    },
+    {
+      "fullDate": "2025-08-19",
+      "d": "08/19",
+      "o": 18250,
+      "h": 18650,
+      "l": 18150,
+      "c": 18350,
+      "v": 3123896
+    },
+    {
+      "fullDate": "2025-08-20",
+      "d": "08/20",
+      "o": 18800,
+      "h": 19050,
+      "l": 18500,
+      "c": 18950,
+      "v": 2906313
+    },
+    {
+      "fullDate": "2025-08-21",
+      "d": "08/21",
+      "o": 19000,
+      "h": 19300,
+      "l": 18700,
+      "c": 19050,
+      "v": 3310678
+    },
+    {
+      "fullDate": "2025-08-22",
+      "d": "08/22",
+      "o": 19300,
+      "h": 19600,
+      "l": 19050,
+      "c": 19100,
+      "v": 866923
+    },
+    {
+      "fullDate": "2025-08-25",
+      "d": "08/25",
+      "o": 19150,
+      "h": 19600,
+      "l": 19050,
+      "c": 19250,
+      "v": 3132972
+    },
+    {
+      "fullDate": "2025-08-26",
+      "d": "08/26",
+      "o": 19300,
+      "h": 19700,
+      "l": 19000,
+      "c": 19400,
+      "v": 3154850
+    },
+    {
+      "fullDate": "2025-08-27",
+      "d": "08/27",
+      "o": 19350,
+      "h": 19800,
+      "l": 19150,
+      "c": 19500,
+      "v": 1624015
+    },
+    {
+      "fullDate": "2025-08-28",
+      "d": "08/28",
+      "o": 19400,
+      "h": 19600,
+      "l": 19100,
+      "c": 19550,
+      "v": 1686307
+    },
+    {
+      "fullDate": "2025-08-29",
+      "d": "08/29",
+      "o": 19900,
+      "h": 20050,
+      "l": 19550,
+      "c": 19700,
+      "v": 1879131
+    },
+    {
+      "fullDate": "2025-09-01",
+      "d": "09/01",
+      "o": 20000,
+      "h": 20350,
+      "l": 19700,
+      "c": 20000,
+      "v": 3420081
+    },
+    {
+      "fullDate": "2025-09-02",
+      "d": "09/02",
+      "o": 19700,
+      "h": 19800,
+      "l": 19200,
+      "c": 19500,
+      "v": 1973322
+    },
+    {
+      "fullDate": "2025-09-03",
+      "d": "09/03",
+      "o": 19900,
+      "h": 20250,
+      "l": 19700,
+      "c": 20000,
+      "v": 1840027
+    },
+    {
+      "fullDate": "2025-09-04",
+      "d": "09/04",
+      "o": 19850,
+      "h": 20200,
+      "l": 19500,
+      "c": 19950,
+      "v": 3299052
+    },
+    {
+      "fullDate": "2025-09-05",
+      "d": "09/05",
+      "o": 20100,
+      "h": 20400,
+      "l": 19850,
+      "c": 20000,
+      "v": 1783397
+    },
+    {
+      "fullDate": "2025-09-08",
+      "d": "09/08",
+      "o": 20000,
+      "h": 20150,
+      "l": 19650,
+      "c": 19900,
+      "v": 3089641
+    },
+    {
+      "fullDate": "2025-09-09",
+      "d": "09/09",
+      "o": 20350,
+      "h": 20600,
+      "l": 20100,
+      "c": 20450,
+      "v": 1886481
+    },
+    {
+      "fullDate": "2025-09-10",
+      "d": "09/10",
+      "o": 20050,
+      "h": 20450,
+      "l": 20000,
+      "c": 20250,
+      "v": 2628758
+    },
+    {
+      "fullDate": "2025-09-11",
+      "d": "09/11",
+      "o": 20800,
+      "h": 20950,
+      "l": 20550,
+      "c": 20750,
+      "v": 801096
+    },
+    {
+      "fullDate": "2025-09-12",
+      "d": "09/12",
+      "o": 20350,
+      "h": 20650,
+      "l": 20200,
+      "c": 20400,
+      "v": 2055468
+    },
+    {
+      "fullDate": "2025-09-15",
+      "d": "09/15",
+      "o": 20600,
+      "h": 20950,
+      "l": 20550,
+      "c": 20750,
+      "v": 2949266
+    },
+    {
+      "fullDate": "2025-09-16",
+      "d": "09/16",
+      "o": 20400,
+      "h": 20800,
+      "l": 20250,
+      "c": 20600,
+      "v": 1705008
+    },
+    {
+      "fullDate": "2025-09-17",
+      "d": "09/17",
+      "o": 21350,
+      "h": 21600,
+      "l": 20900,
+      "c": 21200,
+      "v": 1337650
+    },
+    {
+      "fullDate": "2025-09-18",
+      "d": "09/18",
+      "o": 20500,
+      "h": 20850,
+      "l": 20400,
+      "c": 20650,
+      "v": 996636
+    },
+    {
+      "fullDate": "2025-09-19",
+      "d": "09/19",
+      "o": 21100,
+      "h": 21200,
+      "l": 20900,
+      "c": 21050,
+      "v": 2134818
+    },
+    {
+      "fullDate": "2025-09-22",
+      "d": "09/22",
+      "o": 21250,
+      "h": 21300,
+      "l": 21000,
+      "c": 21150,
+      "v": 2879124
+    },
+    {
+      "fullDate": "2025-09-23",
+      "d": "09/23",
+      "o": 21100,
+      "h": 21250,
+      "l": 21050,
+      "c": 21150,
+      "v": 2198485
+    },
+    {
+      "fullDate": "2025-09-24",
+      "d": "09/24",
+      "o": 21000,
+      "h": 21500,
+      "l": 20800,
+      "c": 21150,
+      "v": 2963824
+    },
+    {
+      "fullDate": "2025-09-25",
+      "d": "09/25",
+      "o": 22000,
+      "h": 22250,
+      "l": 21700,
+      "c": 21750,
+      "v": 3206849
+    },
+    {
+      "fullDate": "2025-09-26",
+      "d": "09/26",
+      "o": 21850,
+      "h": 22050,
+      "l": 21650,
+      "c": 21750,
+      "v": 2279254
+    },
+    {
+      "fullDate": "2025-09-29",
+      "d": "09/29",
+      "o": 22400,
+      "h": 22600,
+      "l": 21950,
+      "c": 22250,
+      "v": 1467547
+    },
+    {
+      "fullDate": "2025-09-30",
+      "d": "09/30",
+      "o": 22250,
+      "h": 22500,
+      "l": 21900,
+      "c": 22100,
+      "v": 1541413
+    },
+    {
+      "fullDate": "2025-10-01",
+      "d": "10/01",
+      "o": 21650,
+      "h": 21900,
+      "l": 21350,
+      "c": 21750,
+      "v": 2258411
+    },
+    {
+      "fullDate": "2025-10-02",
+      "d": "10/02",
+      "o": 21750,
+      "h": 22200,
+      "l": 21600,
+      "c": 21900,
+      "v": 973417
+    },
+    {
+      "fullDate": "2025-10-03",
+      "d": "10/03",
+      "o": 22250,
+      "h": 22450,
+      "l": 21900,
+      "c": 22250,
+      "v": 1934387
+    },
+    {
+      "fullDate": "2025-10-06",
+      "d": "10/06",
+      "o": 23000,
+      "h": 23300,
+      "l": 22850,
+      "c": 22950,
+      "v": 2867105
+    },
+    {
+      "fullDate": "2025-10-07",
+      "d": "10/07",
+      "o": 22400,
+      "h": 22800,
+      "l": 22250,
+      "c": 22650,
+      "v": 3104309
+    },
+    {
+      "fullDate": "2025-10-08",
+      "d": "10/08",
+      "o": 23200,
+      "h": 23550,
+      "l": 23000,
+      "c": 23250,
+      "v": 2428781
+    },
+    {
+      "fullDate": "2025-10-09",
+      "d": "10/09",
+      "o": 22600,
+      "h": 22950,
+      "l": 22200,
+      "c": 22750,
+      "v": 1707549
+    },
+    {
+      "fullDate": "2025-10-10",
+      "d": "10/10",
+      "o": 23150,
+      "h": 23300,
+      "l": 22900,
+      "c": 23200,
+      "v": 1144595
+    },
+    {
+      "fullDate": "2025-10-13",
+      "d": "10/13",
+      "o": 23250,
+      "h": 23700,
+      "l": 23050,
+      "c": 23500,
+      "v": 873175
+    },
+    {
+      "fullDate": "2025-10-14",
+      "d": "10/14",
+      "o": 23400,
+      "h": 23800,
+      "l": 23000,
+      "c": 23600,
+      "v": 1823580
+    },
+    {
+      "fullDate": "2025-10-15",
+      "d": "10/15",
+      "o": 23250,
+      "h": 23700,
+      "l": 22950,
+      "c": 23350,
+      "v": 2830426
+    },
+    {
+      "fullDate": "2025-10-16",
+      "d": "10/16",
+      "o": 23850,
+      "h": 24100,
+      "l": 23450,
+      "c": 24000,
+      "v": 2256431
+    },
+    {
+      "fullDate": "2025-10-17",
+      "d": "10/17",
+      "o": 24150,
+      "h": 24550,
+      "l": 24000,
+      "c": 24250,
+      "v": 2559737
+    },
+    {
+      "fullDate": "2025-10-20",
+      "d": "10/20",
+      "o": 24600,
+      "h": 24750,
+      "l": 23900,
+      "c": 24350,
+      "v": 1211432
+    },
+    {
+      "fullDate": "2025-10-21",
+      "d": "10/21",
+      "o": 24000,
+      "h": 24250,
+      "l": 23550,
+      "c": 23900,
+      "v": 2688555
+    },
+    {
+      "fullDate": "2025-10-22",
+      "d": "10/22",
+      "o": 24400,
+      "h": 24900,
+      "l": 24250,
+      "c": 24600,
+      "v": 1109238
+    },
+    {
+      "fullDate": "2025-10-23",
+      "d": "10/23",
+      "o": 25050,
+      "h": 25150,
+      "l": 24300,
+      "c": 24750,
+      "v": 1642284
+    },
+    {
+      "fullDate": "2025-10-24",
+      "d": "10/24",
+      "o": 24950,
+      "h": 25150,
+      "l": 24550,
+      "c": 24700,
+      "v": 1005190
+    },
+    {
+      "fullDate": "2025-10-27",
+      "d": "10/27",
+      "o": 25150,
+      "h": 25250,
+      "l": 24900,
+      "c": 25050,
+      "v": 3095791
+    },
+    {
+      "fullDate": "2025-10-28",
+      "d": "10/28",
+      "o": 24800,
+      "h": 25500,
+      "l": 24650,
+      "c": 25050,
+      "v": 1737450
+    },
+    {
+      "fullDate": "2025-10-29",
+      "d": "10/29",
+      "o": 24950,
+      "h": 25300,
+      "l": 24650,
+      "c": 25050,
+      "v": 3093854
+    },
+    {
+      "fullDate": "2025-10-30",
+      "d": "10/30",
+      "o": 25250,
+      "h": 25950,
+      "l": 25050,
+      "c": 25500,
+      "v": 3037509
+    },
+    {
+      "fullDate": "2025-10-31",
+      "d": "10/31",
+      "o": 25450,
+      "h": 25850,
+      "l": 25400,
+      "c": 25500,
+      "v": 1529222
+    },
+    {
+      "fullDate": "2025-11-03",
+      "d": "11/03",
+      "o": 25900,
+      "h": 26150,
+      "l": 25600,
+      "c": 25900,
+      "v": 2773770
+    },
+    {
+      "fullDate": "2025-11-04",
+      "d": "11/04",
+      "o": 25700,
+      "h": 26100,
+      "l": 25100,
+      "c": 25500,
+      "v": 3180404
+    },
+    {
+      "fullDate": "2025-11-05",
+      "d": "11/05",
+      "o": 25600,
+      "h": 25900,
+      "l": 25300,
+      "c": 25600,
+      "v": 877489
+    },
+    {
+      "fullDate": "2025-11-06",
+      "d": "11/06",
+      "o": 26050,
+      "h": 26400,
+      "l": 25900,
+      "c": 26250,
+      "v": 1718914
+    },
+    {
+      "fullDate": "2025-11-07",
+      "d": "11/07",
+      "o": 26550,
+      "h": 26700,
+      "l": 25950,
+      "c": 26400,
+      "v": 3359768
+    },
+    {
+      "fullDate": "2025-11-10",
+      "d": "11/10",
+      "o": 26150,
+      "h": 26400,
+      "l": 25850,
+      "c": 26000,
+      "v": 2664645
+    },
+    {
+      "fullDate": "2025-11-11",
+      "d": "11/11",
+      "o": 26600,
+      "h": 27000,
+      "l": 26150,
+      "c": 26600,
+      "v": 1398310
+    },
+    {
+      "fullDate": "2025-11-12",
+      "d": "11/12",
+      "o": 26650,
+      "h": 27050,
+      "l": 26350,
+      "c": 26750,
+      "v": 2233489
+    },
+    {
+      "fullDate": "2025-11-13",
+      "d": "11/13",
+      "o": 26750,
+      "h": 26950,
+      "l": 26400,
+      "c": 26600,
+      "v": 1531474
+    },
+    {
+      "fullDate": "2025-11-14",
+      "d": "11/14",
+      "o": 26300,
+      "h": 26700,
+      "l": 25900,
+      "c": 26550,
+      "v": 2246832
+    },
+    {
+      "fullDate": "2025-11-17",
+      "d": "11/17",
+      "o": 27150,
+      "h": 27500,
+      "l": 26850,
+      "c": 27350,
+      "v": 2756379
+    },
+    {
+      "fullDate": "2025-11-18",
+      "d": "11/18",
+      "o": 27700,
+      "h": 27900,
+      "l": 27250,
+      "c": 27700,
+      "v": 1324117
+    },
+    {
+      "fullDate": "2025-11-19",
+      "d": "11/19",
+      "o": 26850,
+      "h": 27100,
+      "l": 26600,
+      "c": 27050,
+      "v": 1540640
+    },
+    {
+      "fullDate": "2025-11-20",
+      "d": "11/20",
+      "o": 27950,
+      "h": 28300,
+      "l": 27450,
+      "c": 27900,
+      "v": 3144845
+    },
+    {
+      "fullDate": "2025-11-21",
+      "d": "11/21",
+      "o": 27800,
+      "h": 28100,
+      "l": 27250,
+      "c": 27550,
+      "v": 1989265
+    },
+    {
+      "fullDate": "2025-11-24",
+      "d": "11/24",
+      "o": 27250,
+      "h": 28000,
+      "l": 26950,
+      "c": 27550,
+      "v": 3019712
+    },
+    {
+      "fullDate": "2025-11-25",
+      "d": "11/25",
+      "o": 27550,
+      "h": 28200,
+      "l": 27100,
+      "c": 27850,
+      "v": 1202833
+    },
+    {
+      "fullDate": "2025-11-26",
+      "d": "11/26",
+      "o": 28000,
+      "h": 28650,
+      "l": 27550,
+      "c": 28150,
+      "v": 2863997
+    },
+    {
+      "fullDate": "2025-11-27",
+      "d": "11/27",
+      "o": 28500,
+      "h": 28650,
+      "l": 28050,
+      "c": 28300,
+      "v": 2016389
+    },
+    {
+      "fullDate": "2025-11-28",
+      "d": "11/28",
+      "o": 28500,
+      "h": 29000,
+      "l": 27900,
+      "c": 28250,
+      "v": 2476773
+    },
+    {
+      "fullDate": "2025-12-01",
+      "d": "12/01",
+      "o": 28950,
+      "h": 29450,
+      "l": 28400,
+      "c": 28800,
+      "v": 1369768
+    },
+    {
+      "fullDate": "2025-12-02",
+      "d": "12/02",
+      "o": 28850,
+      "h": 29250,
+      "l": 28350,
+      "c": 29100,
+      "v": 807224
+    },
+    {
+      "fullDate": "2025-12-03",
+      "d": "12/03",
+      "o": 29100,
+      "h": 29300,
+      "l": 28650,
+      "c": 29050,
+      "v": 2708780
+    },
+    {
+      "fullDate": "2025-12-04",
+      "d": "12/04",
+      "o": 29500,
+      "h": 29950,
+      "l": 29400,
+      "c": 29550,
+      "v": 2927135
+    },
+    {
+      "fullDate": "2025-12-05",
+      "d": "12/05",
+      "o": 29750,
+      "h": 30250,
+      "l": 29300,
+      "c": 29650,
+      "v": 2270318
+    },
+    {
+      "fullDate": "2025-12-08",
+      "d": "12/08",
+      "o": 30600,
+      "h": 31050,
+      "l": 29800,
+      "c": 30300,
+      "v": 1247991
+    },
+    {
+      "fullDate": "2025-12-09",
+      "d": "12/09",
+      "o": 30350,
+      "h": 30700,
+      "l": 29750,
+      "c": 30150,
+      "v": 1135754
+    },
+    {
+      "fullDate": "2025-12-10",
+      "d": "12/10",
+      "o": 30900,
+      "h": 31450,
+      "l": 30450,
+      "c": 30750,
+      "v": 2133247
+    },
+    {
+      "fullDate": "2025-12-11",
+      "d": "12/11",
+      "o": 29950,
+      "h": 30550,
+      "l": 29550,
+      "c": 30300,
+      "v": 1475993
+    },
+    {
+      "fullDate": "2025-12-12",
+      "d": "12/12",
+      "o": 30850,
+      "h": 31300,
+      "l": 30250,
+      "c": 30500,
+      "v": 3367122
+    },
+    {
+      "fullDate": "2025-12-15",
+      "d": "12/15",
+      "o": 32300,
+      "h": 32500,
+      "l": 31600,
+      "c": 32150,
+      "v": 2841925
+    },
+    {
+      "fullDate": "2025-12-16",
+      "d": "12/16",
+      "o": 31850,
+      "h": 32400,
+      "l": 31250,
+      "c": 31750,
+      "v": 2380389
+    },
+    {
+      "fullDate": "2025-12-17",
+      "d": "12/17",
+      "o": 32150,
+      "h": 32250,
+      "l": 31750,
+      "c": 32150,
+      "v": 1699932
+    },
+    {
+      "fullDate": "2025-12-18",
+      "d": "12/18",
+      "o": 32700,
+      "h": 32950,
+      "l": 32200,
+      "c": 32400,
+      "v": 1578188
+    },
+    {
+      "fullDate": "2025-12-19",
+      "d": "12/19",
+      "o": 33200,
+      "h": 33550,
+      "l": 32600,
+      "c": 32950,
+      "v": 1649196
+    },
+    {
+      "fullDate": "2025-12-22",
+      "d": "12/22",
+      "o": 33200,
+      "h": 33500,
+      "l": 32550,
+      "c": 32850,
+      "v": 3467921
+    },
+    {
+      "fullDate": "2025-12-23",
+      "d": "12/23",
+      "o": 33500,
+      "h": 33800,
+      "l": 32950,
+      "c": 33450,
+      "v": 1776804
+    },
+    {
+      "fullDate": "2025-12-24",
+      "d": "12/24",
+      "o": 33850,
+      "h": 34350,
+      "l": 33250,
+      "c": 33750,
+      "v": 2282893
+    },
+    {
+      "fullDate": "2025-12-25",
+      "d": "12/25",
+      "o": 34150,
+      "h": 34650,
+      "l": 33600,
+      "c": 34200,
+      "v": 3427496
+    },
+    {
+      "fullDate": "2025-12-26",
+      "d": "12/26",
+      "o": 33800,
+      "h": 34150,
+      "l": 33500,
+      "c": 34000,
+      "v": 2291078
+    },
+    {
+      "fullDate": "2025-12-29",
+      "d": "12/29",
+      "o": 34400,
+      "h": 34950,
+      "l": 33650,
+      "c": 34000,
+      "v": 1117158
+    },
+    {
+      "fullDate": "2025-12-30",
+      "d": "12/30",
+      "o": 35100,
+      "h": 35550,
+      "l": 34750,
+      "c": 35100,
+      "v": 1538247
+    },
+    {
+      "fullDate": "2025-12-31",
+      "d": "12/31",
+      "o": 35700,
+      "h": 35900,
+      "l": 35000,
+      "c": 35300,
+      "v": 1835682
+    },
+    {
+      "fullDate": "2026-01-01",
+      "d": "01/01",
+      "o": 35650,
+      "h": 36200,
+      "l": 35500,
+      "c": 35650,
+      "v": 1545867
+    },
+    {
+      "fullDate": "2026-01-02",
+      "d": "01/02",
+      "o": 35650,
+      "h": 36300,
+      "l": 35300,
+      "c": 35700,
+      "v": 3015483
+    },
+    {
+      "fullDate": "2026-01-05",
+      "d": "01/05",
+      "o": 35500,
+      "h": 36050,
+      "l": 35450,
+      "c": 35650,
+      "v": 2122028
+    },
+    {
+      "fullDate": "2026-01-06",
+      "d": "01/06",
+      "o": 35750,
+      "h": 36000,
+      "l": 35350,
+      "c": 35700,
+      "v": 2267261
+    },
+    {
+      "fullDate": "2026-01-07",
+      "d": "01/07",
+      "o": 36150,
+      "h": 36500,
+      "l": 35900,
+      "c": 36300,
+      "v": 2343853
+    },
+    {
+      "fullDate": "2026-01-08",
+      "d": "01/08",
+      "o": 36450,
+      "h": 36550,
+      "l": 36000,
+      "c": 36200,
+      "v": 2704115
+    },
+    {
+      "fullDate": "2026-01-09",
+      "d": "01/09",
+      "o": 37050,
+      "h": 37600,
+      "l": 36850,
+      "c": 37150,
+      "v": 3448208
+    },
+    {
+      "fullDate": "2026-01-12",
+      "d": "01/12",
+      "o": 36950,
+      "h": 37700,
+      "l": 36650,
+      "c": 37350,
+      "v": 3148190
+    },
+    {
+      "fullDate": "2026-01-13",
+      "d": "01/13",
+      "o": 38050,
+      "h": 38500,
+      "l": 37650,
+      "c": 38100,
+      "v": 2750598
+    },
+    {
+      "fullDate": "2026-01-14",
+      "d": "01/14",
+      "o": 37800,
+      "h": 37950,
+      "l": 37250,
+      "c": 37650,
+      "v": 3416849
+    },
+    {
+      "fullDate": "2026-01-15",
+      "d": "01/15",
+      "o": 37950,
+      "h": 38400,
+      "l": 37650,
+      "c": 37800,
+      "v": 3101321
+    },
+    {
+      "fullDate": "2026-01-16",
+      "d": "01/16",
+      "o": 38500,
+      "h": 38850,
+      "l": 38250,
+      "c": 38600,
+      "v": 2850384
+    },
+    {
+      "fullDate": "2026-01-19",
+      "d": "01/19",
+      "o": 38500,
+      "h": 39050,
+      "l": 38200,
+      "c": 38950,
+      "v": 3286508
+    },
+    {
+      "fullDate": "2026-01-20",
+      "d": "01/20",
+      "o": 39450,
+      "h": 39800,
+      "l": 38550,
+      "c": 39200,
+      "v": 2511119
+    },
+    {
+      "fullDate": "2026-01-21",
+      "d": "01/21",
+      "o": 39100,
+      "h": 39650,
+      "l": 38950,
+      "c": 39150,
+      "v": 924175
+    },
+    {
+      "fullDate": "2026-01-22",
+      "d": "01/22",
+      "o": 38950,
+      "h": 39450,
+      "l": 38350,
+      "c": 39150,
+      "v": 2234149
+    },
+    {
+      "fullDate": "2026-01-23",
+      "d": "01/23",
+      "o": 39200,
+      "h": 39400,
+      "l": 38300,
+      "c": 38950,
+      "v": 3151266
+    },
+    {
+      "fullDate": "2026-01-26",
+      "d": "01/26",
+      "o": 39050,
+      "h": 39950,
+      "l": 38450,
+      "c": 39300,
+      "v": 2045104
+    },
+    {
+      "fullDate": "2026-01-27",
+      "d": "01/27",
+      "o": 38650,
+      "h": 39000,
+      "l": 38450,
+      "c": 38900,
+      "v": 3233265
+    },
+    {
+      "fullDate": "2026-01-28",
+      "d": "01/28",
+      "o": 39250,
+      "h": 39950,
+      "l": 38750,
+      "c": 39600,
+      "v": 2386443
+    },
+    {
+      "fullDate": "2026-01-29",
+      "d": "01/29",
+      "o": 39600,
+      "h": 39900,
+      "l": 39400,
+      "c": 39650,
+      "v": 1337885
+    },
+    {
+      "fullDate": "2026-01-30",
+      "d": "01/30",
+      "o": 39400,
+      "h": 39650,
+      "l": 39050,
+      "c": 39400,
+      "v": 2351992
+    },
+    {
+      "fullDate": "2026-02-02",
+      "d": "02/02",
+      "o": 40400,
+      "h": 41300,
+      "l": 40100,
+      "c": 40600,
+      "v": 1541097
+    },
+    {
+      "fullDate": "2026-02-03",
+      "d": "02/03",
+      "o": 40300,
+      "h": 40850,
+      "l": 39400,
+      "c": 40100,
+      "v": 2437297
+    },
+    {
+      "fullDate": "2026-02-04",
+      "d": "02/04",
+      "o": 40500,
+      "h": 40750,
+      "l": 39900,
+      "c": 40100,
+      "v": 2439075
+    },
+    {
+      "fullDate": "2026-02-05",
+      "d": "02/05",
+      "o": 40150,
+      "h": 40650,
+      "l": 39700,
+      "c": 40000,
+      "v": 2746506
+    },
+    {
+      "fullDate": "2026-02-06",
+      "d": "02/06",
+      "o": 40900,
+      "h": 41400,
+      "l": 40400,
+      "c": 40550,
+      "v": 2545119
+    },
+    {
+      "fullDate": "2026-02-09",
+      "d": "02/09",
+      "o": 40300,
+      "h": 40800,
+      "l": 40050,
+      "c": 40350,
+      "v": 1043360
+    },
+    {
+      "fullDate": "2026-02-10",
+      "d": "02/10",
+      "o": 40650,
+      "h": 40850,
+      "l": 39750,
+      "c": 40400,
+      "v": 2256400
+    },
+    {
+      "fullDate": "2026-02-11",
+      "d": "02/11",
+      "o": 41550,
+      "h": 42250,
+      "l": 41300,
+      "c": 41500,
+      "v": 1493819
+    },
+    {
+      "fullDate": "2026-02-12",
+      "d": "02/12",
+      "o": 41400,
+      "h": 42000,
+      "l": 41150,
+      "c": 41400,
+      "v": 1714531
+    },
+    {
+      "fullDate": "2026-02-13",
+      "d": "02/13",
+      "o": 40900,
+      "h": 41050,
+      "l": 40350,
+      "c": 40450,
+      "v": 3122379
+    },
+    {
+      "fullDate": "2026-02-16",
+      "d": "02/16",
+      "o": 42200,
+      "h": 42950,
+      "l": 41500,
+      "c": 41700,
+      "v": 1787592
+    },
+    {
+      "fullDate": "2026-02-17",
+      "d": "02/17",
+      "o": 41400,
+      "h": 42350,
+      "l": 40950,
+      "c": 41900,
+      "v": 2616636
+    },
+    {
+      "fullDate": "2026-02-18",
+      "d": "02/18",
+      "o": 41900,
+      "h": 42550,
+      "l": 41700,
+      "c": 41800,
+      "v": 1092534
+    },
+    {
+      "fullDate": "2026-02-19",
+      "d": "02/19",
+      "o": 40800,
+      "h": 41900,
+      "l": 40450,
+      "c": 41250,
+      "v": 3271190
+    },
+    {
+      "fullDate": "2026-02-20",
+      "d": "02/20",
+      "o": 40900,
+      "h": 42000,
+      "l": 40750,
+      "c": 41350,
+      "v": 1615913
+    },
+    {
+      "fullDate": "2026-02-23",
+      "d": "02/23",
+      "o": 41600,
+      "h": 42650,
+      "l": 41050,
+      "c": 41950,
+      "v": 2130086
+    },
+    {
+      "fullDate": "2026-02-24",
+      "d": "02/24",
+      "o": 41950,
+      "h": 42100,
+      "l": 41100,
+      "c": 41550,
+      "v": 2610312
+    },
+    {
+      "fullDate": "2026-02-25",
+      "d": "02/25",
+      "o": 43100,
+      "h": 43500,
+      "l": 42400,
+      "c": 42650,
+      "v": 1217211
+    },
+    {
+      "fullDate": "2026-02-26",
+      "d": "02/26",
+      "o": 41850,
+      "h": 42650,
+      "l": 41350,
+      "c": 42250,
+      "v": 3369108
+    },
+    {
+      "fullDate": "2026-02-27",
+      "d": "02/27",
+      "o": 41650,
+      "h": 42200,
+      "l": 41550,
+      "c": 41800,
+      "v": 3109715
+    },
+    {
+      "fullDate": "2026-03-02",
+      "d": "03/02",
+      "o": 41850,
+      "h": 42300,
+      "l": 41550,
+      "c": 41650,
+      "v": 1768419
+    },
+    {
+      "fullDate": "2026-03-03",
+      "d": "03/03",
+      "o": 41650,
+      "h": 42100,
+      "l": 41450,
+      "c": 41950,
+      "v": 2027736
+    },
+    {
+      "fullDate": "2026-03-04",
+      "d": "03/04",
+      "o": 42300,
+      "h": 42800,
+      "l": 41400,
+      "c": 42150,
+      "v": 2924345
+    },
+    {
+      "fullDate": "2026-03-05",
+      "d": "03/05",
+      "o": 41000,
+      "h": 41800,
+      "l": 40300,
+      "c": 41350,
+      "v": 2865924
+    },
+    {
+      "fullDate": "2026-03-06",
+      "d": "03/06",
+      "o": 40800,
+      "h": 41750,
+      "l": 40300,
+      "c": 41100,
+      "v": 1198396
+    },
+    {
+      "fullDate": "2026-03-09",
+      "d": "03/09",
+      "o": 41150,
+      "h": 42300,
+      "l": 40500,
+      "c": 41650,
+      "v": 1150978
+    },
+    {
+      "fullDate": "2026-03-10",
+      "d": "03/10",
+      "o": 40200,
+      "h": 41000,
+      "l": 39500,
+      "c": 40500,
+      "v": 840122
+    },
+    {
+      "fullDate": "2026-03-11",
+      "d": "03/11",
+      "o": 40850,
+      "h": 41400,
+      "l": 40250,
+      "c": 41100,
+      "v": 941477
+    },
+    {
+      "fullDate": "2026-03-12",
+      "d": "03/12",
+      "o": 40900,
+      "h": 41450,
+      "l": 40450,
+      "c": 40850,
+      "v": 2900646
+    },
+    {
+      "fullDate": "2026-03-13",
+      "d": "03/13",
+      "o": 39950,
+      "h": 40750,
+      "l": 39850,
+      "c": 40350,
+      "v": 917085
+    },
+    {
+      "fullDate": "2026-03-16",
+      "d": "03/16",
+      "o": 40350,
+      "h": 40750,
+      "l": 39550,
+      "c": 40000,
+      "v": 3402870
+    },
+    {
+      "fullDate": "2026-03-17",
+      "d": "03/17",
+      "o": 38550,
+      "h": 38850,
+      "l": 38300,
+      "c": 38550,
+      "v": 2123725
+    },
+    {
+      "fullDate": "2026-03-18",
+      "d": "03/18",
+      "o": 38950,
+      "h": 39500,
+      "l": 38650,
+      "c": 39350,
+      "v": 977342
+    },
+    {
+      "fullDate": "2026-03-19",
+      "d": "03/19",
+      "o": 38150,
+      "h": 38550,
+      "l": 37550,
+      "c": 38050,
+      "v": 3485494
+    },
+    {
+      "fullDate": "2026-03-20",
+      "d": "03/20",
+      "o": 37950,
+      "h": 38450,
+      "l": 37350,
+      "c": 38000,
+      "v": 2694804
+    },
+    {
+      "fullDate": "2026-03-23",
+      "d": "03/23",
+      "o": 37350,
+      "h": 37900,
+      "l": 36950,
+      "c": 37200,
+      "v": 1380562
+    },
+    {
+      "fullDate": "2026-03-24",
+      "d": "03/24",
+      "o": 36000,
+      "h": 36500,
+      "l": 35600,
+      "c": 36250,
+      "v": 1923172
+    },
+    {
+      "fullDate": "2026-03-25",
+      "d": "03/25",
+      "o": 35300,
+      "h": 35800,
+      "l": 34900,
+      "c": 35350,
+      "v": 1212125
+    },
+    {
+      "fullDate": "2026-03-26",
+      "d": "03/26",
+      "o": 35650,
+      "h": 36550,
+      "l": 35050,
+      "c": 36000,
+      "v": 1060723
+    },
+    {
+      "fullDate": "2026-03-27",
+      "d": "03/27",
+      "o": 35600,
+      "h": 36000,
+      "l": 35050,
+      "c": 35350,
+      "v": 2316283
+    },
+    {
+      "fullDate": "2026-03-30",
+      "d": "03/30",
+      "o": 33750,
+      "h": 34300,
+      "l": 33500,
+      "c": 34050,
+      "v": 2825767
+    },
+    {
+      "fullDate": "2026-03-31",
+      "d": "03/31",
+      "o": 34950,
+      "h": 35550,
+      "l": 34450,
+      "c": 34750,
+      "v": 1749444
+    },
+    {
+      "fullDate": "2026-04-01",
+      "d": "04/01",
+      "o": 34200,
+      "h": 34900,
+      "l": 33700,
+      "c": 34450,
+      "v": 1092189
+    },
+    {
+      "fullDate": "2026-04-02",
+      "d": "04/02",
+      "o": 34700,
+      "h": 35300,
+      "l": 34400,
+      "c": 34800,
+      "v": 2979497
+    },
+    {
+      "fullDate": "2026-04-03",
+      "d": "04/03",
+      "o": 35200,
+      "h": 35750,
+      "l": 34500,
+      "c": 34800,
+      "v": 2535287
+    },
+    {
+      "fullDate": "2026-04-06",
+      "d": "04/06",
+      "o": 34250,
+      "h": 34750,
+      "l": 33450,
+      "c": 33900,
+      "v": 1287123
+    },
+    {
+      "fullDate": "2026-04-07",
+      "d": "04/07",
+      "o": 34600,
+      "h": 35000,
+      "l": 34000,
+      "c": 34750,
+      "v": 3148629
+    },
+    {
+      "fullDate": "2026-04-08",
+      "d": "04/08",
+      "o": 34500,
+      "h": 34750,
+      "l": 34250,
+      "c": 34600,
+      "v": 882774
+    },
+    {
+      "fullDate": "2026-04-09",
+      "d": "04/09",
+      "o": 34600,
+      "h": 35150,
+      "l": 34150,
+      "c": 34850,
+      "v": 1799143
+    },
+    {
+      "fullDate": "2026-04-10",
+      "d": "04/10",
+      "o": 35100,
+      "h": 35500,
+      "l": 34250,
+      "c": 34850,
+      "v": 942043
+    },
+    {
+      "fullDate": "2026-04-13",
+      "d": "04/13",
+      "o": 34350,
+      "h": 34800,
+      "l": 33800,
+      "c": 34250,
+      "v": 2587234
+    },
+    {
+      "fullDate": "2026-04-14",
+      "d": "04/14",
+      "o": 34650,
+      "h": 34900,
+      "l": 34450,
+      "c": 34700,
+      "v": 1107307
+    },
+    {
+      "fullDate": "2026-04-15",
+      "d": "04/15",
+      "o": 34450,
+      "h": 35100,
+      "l": 34100,
+      "c": 34650,
+      "v": 2601257
+    },
+    {
+      "fullDate": "2026-04-16",
+      "d": "04/16",
+      "o": 34100,
+      "h": 34600,
+      "l": 33500,
+      "c": 34200,
+      "v": 1613832
+    },
+    {
+      "fullDate": "2026-04-17",
+      "d": "04/17",
+      "o": 34100,
+      "h": 34600,
+      "l": 33650,
+      "c": 34400,
+      "v": 820870
+    },
+    {
+      "fullDate": "2026-04-20",
+      "d": "04/20",
+      "o": 34950,
+      "h": 35500,
+      "l": 34700,
+      "c": 35200,
+      "v": 2150708
+    },
+    {
+      "fullDate": "2026-04-21",
+      "d": "04/21",
+      "o": 35550,
+      "h": 35650,
+      "l": 35150,
+      "c": 35300,
+      "v": 914216
+    },
+    {
+      "fullDate": "2026-04-22",
+      "d": "04/22",
+      "o": 34650,
+      "h": 35200,
+      "l": 34000,
+      "c": 34300,
+      "v": 2348179
+    },
+    {
+      "fullDate": "2026-04-23",
+      "d": "04/23",
+      "o": 35150,
+      "h": 35350,
+      "l": 34550,
+      "c": 35200,
+      "v": 1676874
+    },
+    {
+      "fullDate": "2026-04-24",
+      "d": "04/24",
+      "o": 35350,
+      "h": 35900,
+      "l": 35150,
+      "c": 35250,
+      "v": 1037950
+    },
+    {
+      "fullDate": "2026-04-27",
+      "d": "04/27",
+      "o": 34900,
+      "h": 35500,
+      "l": 34550,
+      "c": 35100,
+      "v": 1868570
+    },
+    {
+      "fullDate": "2026-04-28",
+      "d": "04/28",
+      "o": 34250,
+      "h": 34650,
+      "l": 33750,
+      "c": 34400,
+      "v": 2178304
+    },
+    {
+      "fullDate": "2026-04-29",
+      "d": "04/29",
+      "o": 34100,
+      "h": 34650,
+      "l": 33700,
+      "c": 34100,
+      "v": 2763923
+    },
+    {
+      "fullDate": "2026-04-30",
+      "d": "04/30",
+      "o": 35150,
+      "h": 35350,
+      "l": 34350,
+      "c": 34900,
+      "v": 1332633
+    },
+    {
+      "fullDate": "2026-05-01",
+      "d": "05/01",
+      "o": 34750,
+      "h": 35200,
+      "l": 34050,
+      "c": 34550,
+      "v": 2886689
+    },
+    {
+      "fullDate": "2026-05-04",
+      "d": "05/04",
+      "o": 34400,
+      "h": 34900,
+      "l": 33850,
+      "c": 34200,
+      "v": 3295216
+    },
+    {
+      "fullDate": "2026-05-05",
+      "d": "05/05",
+      "o": 34350,
+      "h": 34750,
+      "l": 34100,
+      "c": 34250,
+      "v": 2493486
+    },
+    {
+      "fullDate": "2026-05-06",
+      "d": "05/06",
+      "o": 33300,
+      "h": 33950,
+      "l": 32850,
+      "c": 33650,
+      "v": 1541618
+    },
+    {
+      "fullDate": "2026-05-07",
+      "d": "05/07",
+      "o": 33500,
+      "h": 33750,
+      "l": 33150,
+      "c": 33500,
+      "v": 953603
+    },
+    {
+      "fullDate": "2026-05-08",
+      "d": "05/08",
+      "o": 34000,
+      "h": 34900,
+      "l": 33850,
+      "c": 34350,
+      "v": 2460522
+    },
+    {
+      "fullDate": "2026-05-11",
+      "d": "05/11",
+      "o": 33750,
+      "h": 34150,
+      "l": 33550,
+      "c": 33800,
+      "v": 3218867
+    },
+    {
+      "fullDate": "2026-05-12",
+      "d": "05/12",
+      "o": 33900,
+      "h": 34300,
+      "l": 33200,
+      "c": 33650,
+      "v": 2084198
+    },
+    {
+      "fullDate": "2026-05-13",
+      "d": "05/13",
+      "o": 32850,
+      "h": 33300,
+      "l": 32750,
+      "c": 33200,
+      "v": 1727281
+    },
+    {
+      "fullDate": "2026-05-14",
+      "d": "05/14",
+      "o": 33850,
+      "h": 34000,
+      "l": 33350,
+      "c": 33850,
+      "v": 1981947
+    },
+    {
+      "fullDate": "2026-05-15",
+      "d": "05/15",
+      "o": 33450,
+      "h": 33600,
+      "l": 33050,
+      "c": 33450,
+      "v": 1563812
+    },
+    {
+      "fullDate": "2026-05-18",
+      "d": "05/18",
+      "o": 33050,
+      "h": 33600,
+      "l": 32850,
+      "c": 33200,
+      "v": 2547724
+    },
+    {
+      "fullDate": "2026-05-19",
+      "d": "05/19",
+      "o": 32400,
+      "h": 33100,
+      "l": 31950,
+      "c": 32700,
+      "v": 2754080
+    },
+    {
+      "fullDate": "2026-05-20",
+      "d": "05/20",
+      "o": 33700,
+      "h": 34250,
+      "l": 32950,
+      "c": 33350,
+      "v": 2373396
+    },
+    {
+      "fullDate": "2026-05-21",
+      "d": "05/21",
+      "o": 32600,
+      "h": 33250,
+      "l": 32400,
+      "c": 32700,
+      "v": 1858286
+    },
+    {
+      "fullDate": "2026-05-22",
+      "d": "05/22",
+      "o": 33500,
+      "h": 33750,
+      "l": 32750,
+      "c": 33150,
+      "v": 2937487
+    },
+    {
+      "fullDate": "2026-05-25",
+      "d": "05/25",
+      "o": 33000,
+      "h": 33500,
+      "l": 32650,
+      "c": 32850,
+      "v": 2650618
+    }
+  ],
+  "ohlcv_yearly": [
+    {
+      "fullDate": "2023-06",
+      "d": "2023/06",
+      "o": 15000,
+      "h": 15650,
+      "l": 14350,
+      "c": 15000,
+      "v": 44380744
+    },
+    {
+      "fullDate": "2023-12",
+      "d": "2023/12",
+      "o": 16450,
+      "h": 17200,
+      "l": 15750,
+      "c": 16500,
+      "v": 35854842
+    },
+    {
+      "fullDate": "2024-03",
+      "d": "2024/03",
+      "o": 14400,
+      "h": 15100,
+      "l": 13800,
+      "c": 14500,
+      "v": 30407887
+    },
+    {
+      "fullDate": "2024-06",
+      "d": "2024/06",
+      "o": 12800,
+      "h": 13550,
+      "l": 12250,
+      "c": 13000,
+      "v": 53430048
+    },
+    {
+      "fullDate": "2024-09",
+      "d": "2024/09",
+      "o": 14000,
+      "h": 14600,
+      "l": 13400,
+      "c": 14000,
+      "v": 31796291
+    },
+    {
+      "fullDate": "2024-12",
+      "d": "2024/12",
+      "o": 15250,
+      "h": 16150,
+      "l": 14600,
+      "c": 15500,
+      "v": 27314952
+    },
+    {
+      "fullDate": "2025-03",
+      "d": "2025/03",
+      "o": 17100,
+      "h": 17800,
+      "l": 16100,
+      "c": 16800,
+      "v": 28034222
+    },
+    {
+      "fullDate": "2025-06",
+      "d": "2025/06",
+      "o": 14700,
+      "h": 15300,
+      "l": 13900,
+      "c": 14500,
+      "v": 50053594
+    },
+    {
+      "fullDate": "2025-09",
+      "d": "2025/09",
+      "o": 23400,
+      "h": 24350,
+      "l": 22050,
+      "c": 23000,
+      "v": 26132424
+    },
+    {
+      "fullDate": "2025-12",
+      "d": "2025/12",
+      "o": 32750,
+      "h": 34400,
+      "l": 31350,
+      "c": 33000,
+      "v": 47989228
+    },
+    {
+      "fullDate": "2026-03",
+      "d": "2026/03",
+      "o": 37350,
+      "h": 39600,
+      "l": 35750,
+      "c": 38000,
+      "v": 36301596
+    },
+    {
+      "fullDate": "2026-05",
+      "d": "2026/05",
+      "o": 32300,
+      "h": 34250,
+      "l": 30900,
+      "c": 32850,
+      "v": 49940351
+    }
+  ],
+  "news": {
+    "summary": "NH투자증권은 1Q26 지배주주순이익 4,757억원으로 컨센서스(3,940억원)를 크게 상회했습니다. 위탁매매·자산관리·IB 수수료수익 모두 호조를 보이며 순수수료이익이 예상치를 크게 상회했고, IMA 신규 인가로 WM 상품 라인업 확대 및 레버리지 확대가 기대됩니다. 미래에셋·키움 등 주요 증권사들이 잇따라 목표주가를 44,000원으로 상향하며 매수 의견을 유지했습니다.",
+    "items": [
+      {
+        "title": "NH투자증권, 1Q26 순이익 4,757억원…컨센서스 21% 상회",
+        "link": "#",
+        "desc": "위탁매매·IB·WM 수수료 모두 호조, IMA 효과 본격화",
+        "date": "2026-05-15",
+        "category": "실적·이익",
+        "sentiment": "positive"
+      },
+      {
+        "title": "미래에셋·키움, 목표주가 44,000원으로 상향",
+        "link": "#",
+        "desc": "IMA 인가·ROE 개선 가시화로 업사이드 재평가",
+        "date": "2026-05-15",
+        "category": "주가전망",
+        "sentiment": "positive"
+      },
+      {
+        "title": "삼성증권, 목표주가 41,000원…자본시장 호황 안정적 수혜",
+        "link": "#",
+        "desc": "거래대금 증가·운용수익 상향 반영, 26년 이익 추정 25% 상향",
+        "date": "2026-04-24",
+        "category": "주가전망",
+        "sentiment": "positive"
+      },
+      {
+        "title": "증권업 거래대금 사상 최고 경신 지속",
+        "link": "#",
+        "desc": "국내 주식시장 일평균 거래대금 32조원 돌파, 증권사 수혜 지속",
+        "date": "2026-05-20",
+        "category": "업황·시황",
+        "sentiment": "positive"
+      },
+      {
+        "title": "NH투자증권 IMA 잔고 급성장…발행어음 대체 효과",
+        "link": "#",
+        "desc": "IMA 출시 후 잔고 2조원 돌파, 레버리지 비율 확대 기대",
+        "date": "2026-05-18",
+        "category": "실적·이익",
+        "sentiment": "positive"
+      }
+    ]
+  }
+};
+
+// ── 유틸 ─────────────────────────────────────────────────────
+const D   = DASHBOARD_DATA;
+const fmt = n => n?.toLocaleString('ko-KR') ?? '—';
+const GRID = 'rgba(13,43,62,.07)';
+const TICK = { family:"'Noto Sans KR',sans-serif", size:11 };
+
+// ── OHLCV 초기화 ──────────────────────────────────────────────
+if (!D.ohlcv || !D.ohlcv.length) {
+  D.ohlcv = D.chart.prices.map((c,i) => {
+    const o = i>0?D.chart.prices[i-1]:c;
+    const extra = Math.max(Math.abs(c-o)*.4,80)+((i*37+11)%110);
+    const mm=D.chart.dates[i].split('/');
+    return {fullDate:`2026-${mm[0]}-${mm[1]}`,d:D.chart.dates[i],o,h:Math.max(o,c)+extra,l:Math.min(o,c)-extra,c,v:1200000+((i*312547)%2000000)};
+  });
+}
+if (!D.ohlcv_yearly || !D.ohlcv_yearly.length) {
+  const low=D.week52.low*.85, cur=D.price.current, now=new Date(), N=36;
+  D.ohlcv_yearly=Array.from({length:N+1},(_,i)=>{
+    const dt=new Date(now.getFullYear(),now.getMonth()-N+i,1);
+    const r=(i/N), trend=low+(cur-low)*r*r, noise=trend*.06;
+    const o=Math.round(trend+Math.sin(i*.9)*noise*.5), c=Math.round(trend+Math.cos(i*1.3)*noise*.5);
+    const h=Math.max(o,c)+Math.round(noise*.6+(i*7%80)), l=Math.min(o,c)-Math.round(noise*.6+(i*13%60));
+    const y=dt.getFullYear(), m=String(dt.getMonth()+1).padStart(2,'0');
+    return {fullDate:`${y}-${m}`,d:`${y}/${m}`,o,h,l,c,v:Math.round(28000000+(i*314159)%18000000)};
+  });
+}
+
+// ── 집계 ─────────────────────────────────────────────────────
+function getMon(fd){const[y,m,d]=fd.split('-').map(Number);const dt=new Date(y,m-1,d);const dy=dt.getDay()||7;dt.setDate(dt.getDate()-dy+1);return dt.toISOString().split('T')[0]}
+function agg(arr){const l=arr[arr.length-1];return{fullDate:l.fullDate,d:l.d,o:arr[0].o,h:Math.max(...arr.map(a=>a.h)),l:Math.min(...arr.map(a=>a.l)),c:l.c,v:arr.reduce((s,a)=>s+(a.v||0),0)}}
+function aggW(ohls){const m={};ohls.forEach(d=>{const k=getMon(d.fullDate);(m[k]=m[k]||[]).push(d)});return Object.keys(m).sort().map(k=>{const r=agg(m[k]);const mm=r.fullDate.split('-');r.d=`${mm[1]}/${mm[2]}`;return r})}
+function aggM(ohls){const m={};ohls.forEach(d=>{const k=(d.fullDate||'2026-01').substring(0,7);(m[k]=m[k]||[]).push(d)});return Object.keys(m).sort().map(k=>{const r=agg(m[k]);const[y,mo]=k.split('-');r.d=`${y}/${mo}`;return r})}
+function aggY(ohls){const m={};ohls.forEach(d=>{const k=(d.fullDate||'2026').substring(0,4);(m[k]=m[k]||[]).push(d)});return Object.keys(m).sort().map(k=>{const r=agg(m[k]);r.d=k+'년';return r})}
+function getOHLCV(period){
+  switch(period){case'주':return aggW(D.ohlcv);case'월':return aggM(D.ohlcv);case'년':return aggY(D.ohlcv_yearly);default:return D.ohlcv}
+}
+
+// ── 차트 상태 ─────────────────────────────────────────────────
+const state = { type:'line', period:'일' };
+let lineChart=null, candleInst=null;
+
+// ── CandleChart ───────────────────────────────────────────────
+class CandleChart {
+  constructor(cv){this.cv=cv;this.ctx=cv.getContext('2d');this.data=[];this._hov=null;this._mm=this._onMM.bind(this);this._ml=this._onML.bind(this);cv.addEventListener('mousemove',this._mm);cv.addEventListener('mouseleave',this._ml)}
+  setData(data){this.data=data;this._hov=null;this._draw()}
+  destroy(){this.cv.removeEventListener('mousemove',this._mm);this.cv.removeEventListener('mouseleave',this._ml);this.ctx.clearRect(0,0,this.cv.width,this.cv.height)}
+  _draw(){
+    const{cv,ctx,data,_hov}=this;if(!data.length)return;
+    const rect=cv.getBoundingClientRect(),dpr=window.devicePixelRatio||1,W=rect.width,H=rect.height;
+    if(cv.width!==Math.round(W*dpr)){cv.width=Math.round(W*dpr);cv.height=Math.round(H*dpr);ctx.scale(dpr,dpr)}
+    const P={t:20,r:10,b:36,l:76},cW=W-P.l-P.r,cH=H-P.t-P.b;
+    const maxP=Math.max(...data.map(d=>d.h)),minP=Math.min(...data.map(d=>d.l)),span=maxP-minP||1;
+    const pH=maxP+span*.06,pL=minP-span*.06,tot=pH-pL;
+    const toX=i=>P.l+(i+.5)*(cW/data.length),toY=p=>P.t+cH*(1-(p-pL)/tot);
+    const cw=Math.max(2,Math.min(14,cW/data.length*.62));
+    ctx.clearRect(0,0,W,H);
+    // Grid
+    ctx.strokeStyle=GRID;ctx.lineWidth=1;ctx.font=`11px 'Noto Sans KR',sans-serif`;ctx.fillStyle='#7A96A8';ctx.textAlign='right';
+    for(let g=0;g<=5;g++){const p=pL+tot*(g/5),y=toY(p);ctx.beginPath();ctx.moveTo(P.l,y);ctx.lineTo(W-P.r,y);ctx.stroke();ctx.fillText(Math.round(p).toLocaleString('ko-KR'),P.l-6,y+4)}
+    const ev=Math.max(1,Math.ceil(data.length/8));ctx.textAlign='center';
+    data.forEach((d,i)=>{if(i%ev===0||i===data.length-1)ctx.fillText(d.d,toX(i),H-P.b+16)});
+    // Candles
+    data.forEach((d,i)=>{
+      const x=toX(i),isUp=d.c>=d.o,color=isUp?'#D42020':'#1A5FD4',bw=i===_hov?cw*1.2:cw;
+      ctx.strokeStyle=color;ctx.lineWidth=Math.max(1,bw*.15);ctx.beginPath();ctx.moveTo(x,toY(d.h));ctx.lineTo(x,toY(d.l));ctx.stroke();
+      const yT=toY(Math.max(d.o,d.c)),yB=toY(Math.min(d.o,d.c)),bh=Math.max(1.5,yB-yT);
+      ctx.fillStyle=color;ctx.fillRect(x-bw/2,yT,bw,bh);
+    });
+    // Tooltip
+    if(_hov!==null){
+      const d=data[_hov],x=toX(_hov),isUp=d.c>=d.o,chg=d.c-d.o,sign=chg>=0?'+':'',pct=((chg/d.o)*100).toFixed(2);
+      ctx.strokeStyle='rgba(13,43,62,.2)';ctx.lineWidth=1;ctx.setLineDash([4,4]);ctx.beginPath();ctx.moveTo(x,P.t);ctx.lineTo(x,H-P.b);ctx.stroke();ctx.setLineDash([]);
+      const lines=[d.d,`시  ${d.o?.toLocaleString('ko-KR')}`,`고  ${d.h?.toLocaleString('ko-KR')}`,`저  ${d.l?.toLocaleString('ko-KR')}`,`종  ${d.c?.toLocaleString('ko-KR')}`,`${sign}${chg?.toLocaleString('ko-KR')} (${sign}${pct}%)`];
+      const bw2=152,bh2=lines.length*18+18;let bx=x+14;if(bx+bw2>W-8)bx=x-bw2-14;const by=P.t+10;
+      ctx.shadowColor='rgba(0,0,0,.18)';ctx.shadowBlur=10;ctx.fillStyle='#0D2B3E';ctx.beginPath();ctx.roundRect(bx,by,bw2,bh2,7);ctx.fill();ctx.shadowBlur=0;
+      ctx.textAlign='left';ctx.font="600 11px 'Noto Sans KR',sans-serif";ctx.fillStyle='#90E0EF';ctx.fillText(lines[0],bx+10,by+17);
+      ctx.font="400 11px 'Noto Sans KR',sans-serif";lines.slice(1,5).forEach((l,li)=>{ctx.fillStyle='#AACCDD';ctx.fillText(l,bx+10,by+17+(li+1)*17)});
+      ctx.fillStyle=isUp?'#FF8080':'#80AAFF';ctx.fillText(lines[5],bx+10,by+17+5*17);
+    }
+  }
+  _onMM(e){const rect=this.cv.getBoundingClientRect(),mx=e.clientX-rect.left,P={l:76,r:10},cW=rect.width-P.l-P.r,n=this.data.length;if(!n)return;const step=cW/n,i=Math.round((mx-P.l)/step-.5),cl=Math.max(0,Math.min(n-1,i));this._hov=(Math.abs(mx-(P.l+(cl+.5)*step))<step)?cl:null;this._draw()}
+  _onML(){this._hov=null;this._draw()}
+}
+
+// ── 라인 차트 빌더 ────────────────────────────────────────────
+function buildLine(id, ohlcv) {
+  const dates=ohlcv.map(d=>d.d), closes=ohlcv.map(d=>d.c);
+  const ctx=document.getElementById(id).getContext('2d');
+  const trend=closes[closes.length-1]>=closes[0];
+  const lc=trend?'#D42020':'#1A5FD4';
+  const g=ctx.createLinearGradient(0,0,0,320);g.addColorStop(0,lc+'30');g.addColorStop(1,lc+'00');
+  return new Chart(ctx,{type:'line',data:{labels:dates,datasets:[{label:'NH투자증권',data:closes,borderColor:lc,borderWidth:2,pointRadius:0,pointHoverRadius:5,fill:true,backgroundColor:g,tension:.3}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`  ${fmt(c.parsed.y)}원`}}},scales:{x:{grid:{color:GRID},ticks:{maxTicksLimit:10,font:TICK}},y:{grid:{color:GRID},ticks:{font:TICK,callback:v=>fmt(v)}}}}});
+}
+
+// ── 차트 렌더 ─────────────────────────────────────────────────
+function renderMain(){
+  const data=getOHLCV(state.period);
+  const lc=document.getElementById('main-line'), cc=document.getElementById('main-candle');
+  if(state.type==='line'){
+    cc.style.display='none';lc.style.display='';
+    if(candleInst){candleInst.destroy();candleInst=null}
+    if(lineChart){lineChart.destroy();lineChart=null}
+    lineChart=buildLine('main-line',data);
+  }else{
+    lc.style.display='none';cc.style.display='';
+    if(lineChart){lineChart.destroy();lineChart=null}
+    if(!candleInst)candleInst=new CandleChart(cc);
+    candleInst.setData(data);
+  }
+}
+function setType(t,btn){state.type=t;document.querySelectorAll('#type-btns .btn-gk').forEach(b=>b.classList.remove('active'));btn.classList.add('active');renderMain()}
+function setPeriod(p,btn){state.period=p;document.querySelectorAll('#period-btns .btn-g').forEach(b=>b.classList.remove('active'));btn.classList.add('active');renderMain()}
+
+// ── 헤더 ─────────────────────────────────────────────────────
+function renderHeader(){
+  const p=D.price,f=D.fundamentals,a=D.analyst;
+  document.getElementById('hdr-price').innerHTML=`${fmt(p.current)}<span class="price-unit">원</span>`;
+  document.getElementById('upd-label').textContent = D.updated_at;
+  const el=document.getElementById('hdr-chg');
+  if(p.change>0)      el.textContent=`▲ +${fmt(p.change)} (+${p.change_pct}%) 전일 대비`;
+  else if(p.change<0) el.textContent=`▼ ${fmt(p.change)} (${p.change_pct}%) 전일 대비`;
+  else                el.textContent=`— 0원 (0.00%) 전일 대비`;
+  // 한국 증시: 상승=빨간, 하락=파란, 보합=회색
+  el.className='price-chg '+(p.change>0?'up':p.change<0?'dn':'fl');
+
+
+  // 하단 지표 스트립
+  document.getElementById('m-52h').textContent=fmt(D.week52.high);
+  document.getElementById('m-52l').textContent=fmt(D.week52.low);
+  document.getElementById('m-mc').textContent=D.market_cap_trillion+'조';
+  document.getElementById('m-eps').textContent=fmt(f.eps);
+  document.getElementById('m-div').textContent=f.dividend_yield+'%';
+  document.getElementById('m-emp').textContent=fmt(f.employees);
+
+  // 가격 테이블
+  document.getElementById('t-open').textContent=fmt(p.open)+'원';
+  document.getElementById('t-high').textContent=fmt(p.high)+'원';
+  document.getElementById('t-low').textContent=fmt(p.low)+'원';
+  document.getElementById('t-close').textContent=fmt(p.current)+'원';
+  document.getElementById('t-prev').textContent=fmt(p.prev_close)+'원';
+  document.getElementById('t-mc').textContent=D.market_cap_trillion+'조원';
+  document.getElementById('t-vol').textContent=fmt(D.volume)+'주';
+  const sc=p.change>0?'pos':p.change<0?'neg':'';
+  const st=document.getElementById('t-chg');
+  st.textContent=`${p.change>0?'+':''}${fmt(p.change)}원 (${p.change>0?'+':''}${p.change_pct}%)`;
+  // 상승=빨간, 하락=파란
+  if(sc) st.style.color=sc==='pos'?'#D42020':'#1A5FD4';
+}
+
+// ── 분기 하이라이트 ────────────────────────────────────────────
+function renderQuarterlyHL(){
+  const q=D.quarterly||[];
+  const last=q[q.length-1];if(!last)return;
+  const hl=[
+    {label:'2026 Q1 순영업수익',val:(last.revenue||'—')+'조',sub:'▲ '+last.yoy+' YoY',badge:last.yoy},
+    {label:'2026 Q1 세전이익', val:(last.op_income||'—')+'조',sub:'영업이익률 '+Math.round(last.op_income/last.revenue*100)+'%',badge:null},
+    {label:'영업이익률',val:Math.round(last.op_income/last.revenue*100)+'%',sub:'전분기 대비 개선',badge:null},
+    {label:'시가총액 ('+D.date+')',val:D.market_cap_trillion+'조',sub:'52주 고가 '+fmt(D.week52.high)+'원',badge:null},
+  ];
+  document.getElementById('quarterly-hl').innerHTML=hl.map(h=>`
+    <div class="hl-card">
+      <div class="hl-label">${h.label}</div>
+      <div class="hl-value">${h.val}</div>
+      <div class="hl-sub">${h.sub}</div>
+      ${h.badge?`<div class="hl-badge">${h.badge}</div>`:''}
+    </div>`).join('');
+}
+
+// ── 재무 탭 ────────────────────────────────────────────────────
+let finCharts={};
+function renderFin(){
+  if(finCharts.rev) return; // 이미 렌더됨
+  const ann=D.annual||[];
+  const labels=ann.map(a=>a.year);
+  const mkBar=(id,data,label,color)=>{
+    const ctx=document.getElementById(id).getContext('2d');
+    finCharts[id]=new Chart(ctx,{type:'bar',data:{labels,datasets:[{label,data,backgroundColor:color+'BB',borderColor:color,borderWidth:1,borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{grid:{color:GRID},ticks:{font:TICK}},y:{grid:{color:GRID},ticks:{font:TICK,callback:v=>v+'조'}}}}});
+  };
+  mkBar('fin-rev',ann.map(a=>a.revenue),'순영업수익','#0D2B3E');
+  mkBar('fin-op',ann.map(a=>a.op_income),'세전이익','#00B4D8');
+  // 분기표
+  const qt=D.quarterly||[];
+  document.getElementById('fin-qtbl').innerHTML=`
+    <thead><tr><th>분기</th><th>순영업수익(조)</th><th>세전이익(조)</th><th>YoY</th></tr></thead>
+    <tbody>${qt.map(q=>`<tr><td>${q.q}</td><td class="num">${q.revenue}</td><td class="num">${q.op_income}</td><td class="num" style="color:${q.yoy.startsWith('+')? '#D42020':'#1A5FD4'}">${q.yoy}</td></tr>`).join('')}</tbody>`;
+  // 재무비율표
+  const f=D.fundamentals;
+  document.getElementById('fin-ratios').innerHTML=`
+    <thead><tr><th>지표</th><th style="text-align:right">2023</th><th style="text-align:right">2024</th><th style="text-align:right">2025</th><th style="text-align:right">2026 Q1</th></tr></thead>
+    <tbody>
+      <tr><td>순영업수익 (조원)</td><td class="num">4.8</td><td class="num">6.2</td><td class="num">7.4</td><td class="num">${D.quarterly?.slice(-1)[0]?.revenue||'—'}</td></tr>
+      <tr><td>세전이익 (조원)</td><td class="num">0.45</td><td class="num">0.81</td><td class="num">1.02</td><td class="num">${D.quarterly?.slice(-1)[0]?.op_income||'—'}</td></tr>
+      <tr><td>EPS (원)</td><td class="num">2,940</td><td class="num">3,280</td><td class="num">3,620</td><td class="num">${fmt(f.eps)}</td></tr>
+      <tr><td>BPS (원)</td><td class="num">24,100</td><td class="num">25,800</td><td class="num">27,200</td><td class="num">${fmt(f.bps)}</td></tr>
+      <tr><td>DPS (원)</td><td class="num">600</td><td class="num">650</td><td class="num">700</td><td class="num">${fmt(f.dps)}</td></tr>
+      <tr><td>배당수익률 (%)</td><td class="num">—</td><td class="num">—</td><td class="num">—</td><td class="num">${f.dividend_yield}%</td></tr>
+    </tbody>`;
+}
+
+// ── 경쟁사 탭 ──────────────────────────────────────────────────
+let compChartInst=null;
+function renderComp(){
+  if(compChartInst) return;
+  const comps=[{ticker:'005940',name:'NH투자증권',color:'#0D2B3E',price:D.price.current,change_pct:D.price.change_pct,week52_high:D.week52.high,week52_low:D.week52.low,mktcap_trillion:D.market_cap_trillion,self:true},...(D.competitors||[])];
+  document.getElementById('comp-desc').textContent=`⚔️ 기준일: ${D.date}`;
+  document.getElementById('comp-cards').innerHTML=comps.map(c=>`
+    <div class="comp-card${c.self?' self':''}">
+      <div class="comp-header">
+        <div><div class="comp-name" style="color:${c.color||'#0D2B3E'}">${c.name}</div><div class="comp-ticker">KOSPI · ${c.ticker}</div></div>
+        <div class="comp-price-block">
+          <div class="comp-price">${fmt(c.price)} <span style="font-size:13px;color:#7A96A8">원</span></div>
+          <div class="comp-chg ${c.change_pct>0?'up':'dn'}">${c.change_pct>0?'▲':'▼'} ${Math.abs(c.change_pct)}%</div>
+        </div>
+      </div>
+      <div class="comp-metrics">
+        <div class="cm-item">시총 <span>${c.mktcap_trillion}조</span></div>
+        <div class="cm-item">52주 <span>${fmt(c.week52_high)} / ${fmt(c.week52_low)}</span></div>
+      </div>
+    </div>`).join('');
+  // 시총 바 차트
+  const ctx=document.getElementById('comp-mc-chart').getContext('2d');
+  compChartInst=new Chart(ctx,{type:'bar',data:{labels:comps.map(c=>c.name),datasets:[{data:comps.map(c=>c.mktcap_trillion),backgroundColor:comps.map(c=>c.color||'#0D2B3E'),borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,indexAxis:'y',plugins:{legend:{display:false}},scales:{x:{grid:{color:GRID},ticks:{font:TICK,callback:v=>v+'조'}},y:{grid:{color:GRID},ticks:{font:{family:"'Noto Sans KR',sans-serif",size:11}}}}}});
+  // 52주 위치 바
+  document.getElementById('comp-bars').innerHTML=comps.map(c=>{
+    const pos=c.week52_high>c.week52_low?Math.round((c.price-c.week52_low)/(c.week52_high-c.week52_low)*100):0;
+    return `<div class="sector-row">
+      <div class="sector-info"><span class="sector-name">${c.name}</span><span class="sector-val">${pos}%</span></div>
+      <div class="bar-bg"><div class="bar-fill" style="width:${pos}%;background:${c.color||'#0D2B3E'}99"></div></div>
+    </div>`;
+  }).join('');
+}
+
+// ── 애널리스트 탭 ──────────────────────────────────────────────
+function renderAnalyst(){
+  const a=D.analyst;if(!a)return;
+  const cur=D.price.current, lo=a.target_low, hi=a.target_high, avg=a.target_avg;
+  const pctCur=Math.max(0,Math.min(100,Math.round((cur-lo)/(hi-lo)*100)));
+  const pctAvg=Math.max(0,Math.min(100,Math.round((avg-lo)/(hi-lo)*100)));
+  document.getElementById('cons-block').innerHTML=`
+    <div class="cons-badge">
+      <div class="cons-label">CONSENSUS</div>
+      <div class="cons-text">${a.consensus}</div>
+      <div class="cons-stars">★★★★☆</div>
+    </div>
+    <div class="cons-stats">
+      <div class="cs-item"><div class="cs-val" style="color:#009B77">${a.counts.buy}</div><div class="cs-lbl">매수</div></div>
+      <div class="cs-item"><div class="cs-val" style="color:#8899AA">${a.counts.neutral}</div><div class="cs-lbl">중립</div></div>
+      <div class="cs-item"><div class="cs-val" style="color:#888">${a.counts.sell}</div><div class="cs-lbl">매도</div></div>
+    </div>`;
+  document.getElementById('target-bar').innerHTML=`
+    <div class="section-title" style="margin-bottom:12px">목표주가 분포</div>
+    <div style="display:flex;justify-content:space-between;font-size:12px;font-family:'Noto Sans KR',sans-serif;margin-bottom:6px">
+      <span>최저 ${fmt(lo)}원</span><span style="color:#0D2B3E;font-weight:700">현재가 ${fmt(cur)}원</span><span style="color:#F4A72A;font-weight:700">컨센서스 ${fmt(avg)}원</span><span>최고 ${fmt(hi)}원</span>
+    </div>
+    <div class="tbar-track">
+      <div class="tbar-fill" style="width:100%"></div>
+      <div class="tbar-marker" style="left:${pctCur}%"><div class="tbar-current">현재가</div></div>
+    </div>
+    <div class="tbar-labels"><span>${fmt(lo)}</span><span>${fmt(hi)}</span></div>`;
+  document.getElementById('analyst-tbl').innerHTML=`
+    <thead><tr><th>증권사</th><th>투자의견</th><th style="text-align:right">목표주가</th><th style="text-align:right">현재가 대비</th><th>비고</th></tr></thead>
+    <tbody>${(a.firms||[]).map(f=>{
+      const diff=Math.round((f.target-cur)/cur*100);
+      return`<tr><td style="font-weight:600">${f.firm}</td><td>${f.opinion}</td><td class="num">${fmt(f.target)}원</td><td class="num" style="color:${diff>=0?'#D42020':'#1A5FD4'}">${diff>=0?'+':''}${diff}%</td><td style="color:#7A96A8">${f.note}</td></tr>`;
+    }).join('')}</tbody>`;
+  document.getElementById('outlook-tbl').innerHTML=`
+    <thead><tr><th>항목</th><th>2026 예상</th><th>YoY</th><th>비고</th></tr></thead>
+    <tbody>
+      <tr><td>연간 순영업수익</td><td class="num">7.8~8.2조원</td><td class="num" style="color:#D42020">+6~11%</td><td>거래대금 회복 견인</td></tr>
+      <tr><td>세전이익</td><td class="num">1.0~1.1조원</td><td class="num" style="color:#D42020">+8~18%</td><td>IB·WM 수익 확대</td></tr>
+      <tr><td>배당 (DPS)</td><td class="num">700~800원</td><td class="num" style="color:#D42020">+0~14%</td><td>배당성향 25~30%</td></tr>
+      <tr><td>다음 실적 발표</td><td class="num">2026.08월 예정</td><td>—</td><td>2026 Q2 실적</td></tr>
+    </tbody>`;
+}
+
+// ── 뉴스: Google News RSS + Claude API 연동 ─────────────────
+const _RSS_URL = 'https://news.google.com/rss/search?q=NH%ED%88%AC%EC%9E%90%EC%A6%9D%EA%B6%8C+005940&hl=ko&gl=KR&ceid=KR%3Ako';
+const _RSS_API = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(_RSS_URL)}&count=25&order_by=pubDate&order_dir=desc`;
+const _CLAUDE  = 'https://api.anthropic.com/v1/messages';
+
+let _newsFetched = false;
+
+// ── API 키 관리 (sessionStorage) ────────────────────────────
+function _getKey()       { return sessionStorage.getItem('nh_claude_key') || ''; }
+function _setKey(k)      { k ? sessionStorage.setItem('nh_claude_key', k) : sessionStorage.removeItem('nh_claude_key'); }
+
+function _updateAiStatus() {
+  const key  = _getKey();
+  const dot  = document.getElementById('ai-dot');
+  const txt  = document.getElementById('ai-status-text');
+  const btn  = document.getElementById('ai-key-btn');
+  if (!dot || !txt) return;
+  if (key) {
+    dot.className = 'ai-dot on';
+    txt.textContent = 'Claude AI 연동됨 — AI 분석 모드 활성화';
+    if (btn) btn.textContent = '🔑 API 키 변경';
+  } else {
+    dot.className = 'ai-dot off';
+    txt.textContent = 'Claude AI 미연동 — RSS 자동 분류 모드';
+    if (btn) btn.textContent = '🔑 Claude API 설정';
+  }
+}
+
+function toggleApiKey() {
+  const sec = document.getElementById('api-key-section');
+  const inp = document.getElementById('api-key-input');
+  const hidden = sec.style.display === 'none';
+  sec.style.display = hidden ? 'block' : 'none';
+  if (hidden) { inp.value = _getKey(); inp.focus(); }
+}
+
+async function saveAndAnalyze() {
+  const key = document.getElementById('api-key-input').value.trim();
+  _setKey(key);
+  _updateAiStatus();
+  document.getElementById('api-key-section').style.display = 'none';
+  _newsFetched = false;
+  await renderNews();
+}
+
+function clearAndReset() {
+  _setKey('');
+  document.getElementById('api-key-input').value = '';
+  _updateAiStatus();
+  document.getElementById('api-key-section').style.display = 'none';
+  _newsFetched = false;
+  renderNews();
+}
+
+// ── 텍스트 정제 ──────────────────────────────────────────────
+function _cleanTitle(t) { return (t||'').replace(/\s*[-–|]\s*[^-–|\s][^-–|]{0,20}$/, '').trim(); }
+function _cleanHtml(h)  { return (h||'').replace(/<[^>]+>/g,'').replace(/&[a-z#0-9]+;/gi,' ').replace(/\s+/g,' ').trim(); }
+
+// ── JS 자동 분류 (Claude 없을 때 폴백) ──────────────────────
+function _category(t) {
+  const map = [
+    [['실적','순이익','영업이익','매출','1Q','2Q','3Q','4Q','분기','어닝'],  '실적·이익'],
+    [['목표주가','상향','하향','매수','중립','매도','투자의견','리포트','TP'],'주가전망'],
+    [['거래대금','증권업','시황','업황','거래량','코스피','코스닥'],          '업황·시황'],
+    [['금리','채권','금통위','한국은행','기준금리'],                          '금리·채권'],
+    [['IMA','발행어음','상품','서비스','출시','론칭','신규'],                '상품·서비스'],
+    [['배당','자사주','주주환원'],                                            '주주환원'],
+    [['인사','대표','CEO','부사장','사장','임원','이사'],                     '인사·조직'],
+    [['IPO','상장','공모','청약'],                                           'IPO·공모'],
+    [['파생','선물','옵션','ETF'],                                           '파생·ETF'],
+  ];
+  for (const [kws, cat] of map) { if (kws.some(k => t.includes(k))) return cat; }
+  return '증권·금융';
+}
+function _sentiment(t) {
+  const P = ['상향','급등','호조','최고','증가','성장','개선','매수','상승','신고가','서프라이즈','강세','최대','돌파','어닝'];
+  const N = ['하향','급락','부진','하락','감소','우려','악화','손실','적자','리스크','약세','최저','붕괴'];
+  return P.some(w=>t.includes(w))?'positive':N.some(w=>t.includes(w))?'negative':'neutral';
+}
+
+// ── Claude API 호출 ──────────────────────────────────────────
+async function _callClaude(items, apiKey) {
+  const list = items.slice(0, 20).map((item, i) =>
+    `${i+1}. [${item.date}] ${item.title}`).join('\n');
+
+  const resp = await fetch(_CLAUDE, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-api-key': apiKey,
+      'anthropic-version': '2023-06-01',
+      'anthropic-dangerous-direct-browser-access': 'true'
+    },
+    body: JSON.stringify({
+      model: 'claude-sonnet-4-20250514',
+      max_tokens: 2000,
+      messages: [{ role: 'user', content:
+`다음은 NH투자증권(005940) 관련 최신 뉴스입니다.
+아래 JSON 형식으로만 응답하세요. 코드블록·설명 없이 순수 JSON만 반환하세요.
+
+뉴스 목록:
+${list}
+
+{
+  "summary": "전체 뉴스를 종합한 3문장 이내 시황 요약 (한국어, 증권 전문가 어조)",
+  "items": [
+    {"index":1,"category":"카테고리","sentiment":"positive|neutral|negative","desc":"한 줄 핵심 요약 (30자 이내)"},
+    ...뉴스 수만큼...
+  ]
+}
+
+카테고리 목록: 실적·이익, 주가전망, 업황·시황, 금리·채권, 상품·서비스, 주주환원, 인사·조직, IPO·공모, 파생·ETF, 증권·금융`
+      }]
+    })
+  });
+
+  if (!resp.ok) {
+    const errText = await resp.text().catch(()=>'');
+    throw new Error(`Claude API ${resp.status}: ${errText.slice(0,100)}`);
+  }
+  const data = await resp.json();
+  const text = data.content?.find(b => b.type==='text')?.text || '';
+  return JSON.parse(text.replace(/```json|```/g,'').trim());
+}
+
+// ── 뉴스 카드 HTML ───────────────────────────────────────────
+function _newsCardHTML(item, idx) {
+  return `
+    <a href="${item.link}" target="_blank" rel="noopener" style="text-decoration:none;color:inherit">
+      <div class="news-card">
+        <div class="news-cat-dot ${item.sentiment}"></div>
+        <div class="news-body">
+          <div class="news-cat-badge">${String(idx+1).padStart(2,'0')} ${item.category}</div>
+          <div class="news-title">${item.title}</div>
+          <div class="news-desc">${item.desc}</div>
+          <div class="news-meta">${item.date}</div>
+        </div>
+        <div class="news-link-icon">↗ 원문 보기</div>
+      </div>
+    </a>`;
+}
+
+function _setNewsStatus(html) {
+  const el = document.getElementById('news-status');
+  if (el) el.innerHTML = html;
+}
+
+// ── 메인 renderNews ──────────────────────────────────────────
+async function renderNews() {
+  if (_newsFetched) return;
+
+  const grid  = document.getElementById('news-grid');
+  const sumEl = document.getElementById('news-sum');
+  const btn   = document.getElementById('news-refresh-btn');
+  const icon  = document.getElementById('refresh-icon');
+  const dot   = document.getElementById('ai-dot');
+
+  grid.innerHTML = `<div class="news-loading"><span class="spin">⟳</span> Google News에서 NH투자증권 최신 뉴스를 가져오는 중...</div>`;
+  sumEl.textContent = '';
+  _setNewsStatus('');
+  if (btn)  btn.disabled = true;
+  if (icon) icon.textContent = '⟳';
+  if (dot)  dot.className = 'ai-dot loading';
+
+  let items = [];
+
+  // ── STEP 1: Google News RSS 수집 ──────────────────────────
+  try {
+    const resp = await fetch(_RSS_API, { signal: AbortSignal.timeout(9000) });
+    if (!resp.ok) throw new Error('HTTP ' + resp.status);
+    const data = await resp.json();
+    if (data.status !== 'ok' || !data.items?.length) throw new Error('RSS 응답 오류');
+
+    items = data.items.map(item => ({
+      title:     _cleanTitle(item.title),
+      link:      item.link || '#',
+      desc:      _cleanHtml(item.description).slice(0, 130),
+      date:      (item.pubDate || '').slice(0, 10),
+      category:  _category(item.title),
+      sentiment: _sentiment(item.title)
+    }));
+
+  } catch(rssErr) {
+    console.warn('[RSS]', rssErr.message);
+    // RSS 실패 시 내장 데이터 폴백
+    items = (D.news?.items || []).map(i => ({
+      title: i.title||'', link: i.link||'#', desc: i.desc||'',
+      date: i.date||'', category: i.category||'기타', sentiment: i.sentiment||'neutral'
+    }));
+    _setNewsStatus(`<span style="color:var(--neu)">●</span> RSS 로드 실패 — 내장 데이터 표시 중 <small>(${rssErr.message})</small>`);
+    if (dot) dot.className = 'ai-dot error';
+    sumEl.textContent = D.news?.summary || '';
+    grid.innerHTML = items.length ? items.map(_newsCardHTML).join('') : `<div class="news-loading">뉴스를 불러오지 못했습니다.</div>`;
+    _newsFetched = true;
+    if (btn) btn.disabled = false;
+    if (icon) icon.textContent = '🔄';
+    return;
+  }
+
+  // ── STEP 2: Claude API 분석 (키가 있을 때) ────────────────
+  const apiKey = _getKey();
+  let   summary = D.news?.summary || '';
+
+  if (apiKey && items.length) {
+    _setNewsStatus(`<span class="spin" style="font-size:13px">⟳</span> Claude AI가 ${items.length}건의 뉴스를 분석하는 중...`);
+
+    try {
+      const ai = await _callClaude(items, apiKey);
+
+      // AI 결과 병합
+      if (ai.summary) summary = ai.summary;
+      (ai.items || []).forEach(a => {
+        const idx = a.index - 1;
+        if (items[idx]) {
+          items[idx].category  = a.category  || items[idx].category;
+          items[idx].sentiment = a.sentiment || items[idx].sentiment;
+          if (a.desc) items[idx].desc = a.desc;
+        }
+      });
+
+      if (dot) dot.className = 'ai-dot on';
+      _setNewsStatus(`
+        <span style="color:#009B77">●</span>
+        Claude AI 분석 완료 · Google News ${items.length}건 · ${new Date().toLocaleTimeString('ko-KR')} 기준
+      `);
+
+    } catch(aiErr) {
+      console.warn('[Claude]', aiErr.message);
+      if (dot) dot.className = 'ai-dot error';
+      _setNewsStatus(`
+        <span style="color:var(--gold)">●</span>
+        Claude AI 오류 — RSS 자동 분류로 표시 중
+        <small style="margin-left:4px;opacity:.65">(${aiErr.message.slice(0,60)})</small>
+      `);
+    }
+
+  } else {
+    // Claude 없이 RSS만
+    if (dot) dot.className = 'ai-dot off';
+    _setNewsStatus(`
+      <span style="color:#00B4D8">●</span>
+      Google News 실시간 · ${items.length}건 · ${new Date().toLocaleTimeString('ko-KR')} 기준
+      <span style="margin-left:8px;opacity:.6">(Claude AI 미연동)</span>
+    `);
+  }
+
+  // ── STEP 3: 렌더링 ────────────────────────────────────────
+  if (summary) sumEl.textContent = summary;
+  grid.innerHTML = items.map((item, i) => _newsCardHTML(item, i)).join('');
+  _newsFetched = true;
+
+  if (btn)  btn.disabled = false;
+  if (icon) icon.textContent = '🔄';
+}
+
+// 강제 새로고침
+async function refreshNews() {
+  _newsFetched = false;
+  await renderNews();
+}
+
+// ── 탭 전환 ────────────────────────────────────────────────────
+function switchTab(id, btn) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('tab-' + id).classList.add('active');
+  if (id === 'fin')     renderFin();
+  if (id === 'comp')    renderComp();
+  if (id === 'analyst') renderAnalyst();
+  if (id === 'news')    renderNews();   // 비동기 — 최초 1회만 실제 fetch
+}
+
+// ── ResizeObserver ────────────────────────────────────────────
+new ResizeObserver(() => { if (candleInst) candleInst._draw(); })
+  .observe(document.getElementById('main-wrap'));
+
+// ── 초기화 ───────────────────────────────────────────────────
+renderHeader();
+renderQuarterlyHL();
+_updateAiStatus();
+renderMain();
+</script>
+</body>
+</html>
