@@ -3471,7 +3471,9 @@ class CandleChart {
     // Tooltip
     if (_hov !== null && vd[_hov]) {
       const d=vd[_hov], x=toX(_hov), isUp=d.c>=d.o;
-      const chg=d.c-d.o, sign=chg>=0?'+':'', pct=((chg/(d.o||1))*100).toFixed(2);
+      // 전일 종가 대비 (첫 번째 봉은 시가 대비)
+      const prevC = _hov > 0 ? vd[_hov-1].c : (d.o || d.c);
+      const chg=d.c-prevC, sign=chg>=0?'+':'', pct=((chg/(prevC||1))*100).toFixed(2);
       ctx.strokeStyle='rgba(13,43,62,.2)'; ctx.lineWidth=1; ctx.setLineDash([4,4]);
       ctx.beginPath(); ctx.moveTo(x,P.t); ctx.lineTo(x,H-P.b); ctx.stroke(); ctx.setLineDash([]);
       const lines=[d.d,`시  ${d.o?.toLocaleString('ko-KR')}`,`고  ${d.h?.toLocaleString('ko-KR')}`,`저  ${d.l?.toLocaleString('ko-KR')}`,`종  ${d.c?.toLocaleString('ko-KR')}`,`${sign}${chg?.toLocaleString('ko-KR')} (${sign}${pct}%)`];
