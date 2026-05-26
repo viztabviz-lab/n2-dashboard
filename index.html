@@ -3614,18 +3614,18 @@ function renderAnalyst(){
 }
 
 // ── 뉴스: Google News RSS + Claude API 연동 ─────────────────
-const _RSS_URL = 'https://news.google.com/rss/search?q=NH%ED%88%AC%EC%9E%90%EC%A6%9D%EA%B6%8C+005940&hl=ko&gl=KR&ceid=KR%3Ako';
-const _RSS_API = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(_RSS_URL)}&count=25`;
+// 한글 그대로 사용 (encodeURIComponent는 fetch 시 처리)
+const _RSS_URL = 'https://news.google.com/rss/search?q=NH투자증권+005940&hl=ko&gl=KR&ceid=KR:ko';
 const _CLAUDE  = 'https://api.anthropic.com/v1/messages';
 
 let _newsFetched = false;
 
 // ── API 키 관리 (sessionStorage) ────────────────────────────
-function _getKey()       { return sessionStorage.getItem('nh_claude_key') || ''; }
-function _setKey(k)      { k ? sessionStorage.setItem('nh_claude_key', k) : sessionStorage.removeItem('nh_claude_key'); }
+function _getKey()  { return sessionStorage.getItem('nh_claude_key') || ''; }
+function _setKey(k) { k ? sessionStorage.setItem('nh_claude_key', k) : sessionStorage.removeItem('nh_claude_key'); }
 
 function _updateAiStatus() {
-  const key  = _getKey();
+  const key = _getKey();
   const dot  = document.getElementById('ai-dot');
   const txt  = document.getElementById('ai-status-text');
   const btn  = document.getElementById('ai-key-btn');
@@ -3648,30 +3648,25 @@ function toggleApiKey() {
   sec.style.display = hidden ? 'block' : 'none';
   if (hidden) { inp.value = _getKey(); inp.focus(); }
 }
-
 async function saveAndAnalyze() {
   const key = document.getElementById('api-key-input').value.trim();
-  _setKey(key);
-  _updateAiStatus();
+  _setKey(key); _updateAiStatus();
   document.getElementById('api-key-section').style.display = 'none';
   _newsFetched = false;
   await renderNews();
 }
-
 function clearAndReset() {
-  _setKey('');
-  document.getElementById('api-key-input').value = '';
+  _setKey(''); document.getElementById('api-key-input').value = '';
   _updateAiStatus();
   document.getElementById('api-key-section').style.display = 'none';
-  _newsFetched = false;
-  renderNews();
+  _newsFetched = false; renderNews();
 }
 
 // ── 텍스트 정제 ──────────────────────────────────────────────
 function _cleanTitle(t) { return (t||'').replace(/\s*[-–|]\s*[^-–|\s][^-–|]{0,20}$/, '').trim(); }
 function _cleanHtml(h)  { return (h||'').replace(/<[^>]+>/g,'').replace(/&[a-z#0-9]+;/gi,' ').replace(/\s+/g,' ').trim(); }
 
-// ── JS 자동 분류 (Claude 없을 때 폴백) ──────────────────────
+// ── JS 자동 분류 ─────────────────────────────────────────────
 function _category(t) {
   const map = [
     [['실적','순이익','영업이익','매출','1Q','2Q','3Q','4Q','분기','어닝'],  '실적·이익'],
@@ -3680,7 +3675,7 @@ function _category(t) {
     [['금리','채권','금통위','한국은행','기준금리'],                          '금리·채권'],
     [['IMA','발행어음','상품','서비스','출시','론칭','신규'],                '상품·서비스'],
     [['배당','자사주','주주환원'],                                            '주주환원'],
-    [['인사','대표','CEO','부사장','사장','임원','이사'],                     '인사·조직'],
+    [['인사','대표','CEO','부사장','사장','임원'],                            '인사·조직'],
     [['IPO','상장','공모','청약'],                                           'IPO·공모'],
     [['파생','선물','옵션','ETF'],                                           '파생·ETF'],
   ];
@@ -3693,12 +3688,75 @@ function _sentiment(t) {
   return P.some(w=>t.includes(w))?'positive':N.some(w=>t.includes(w))?'negative':'neutral';
 }
 
+// ── RSS XML 파서 (corsproxy / allorigins 응답용) ─────────────
+function _parseRSSXML(xmlText) {
+  const doc = new DOMParser().parseFromString(xmlText, 'text/xml');
+  if (doc.querySelector('parsererror')) throw new Error('XML 파싱 실패');
+  return [...doc.querySelectorAll('item')].map(el => {
+    const g = tag => el.querySelector(tag)?.textContent?.trim() || '';
+    return { title: g('title'), link: g('link'), description: g('description'), pubDate: g('pubDate') };
+  });
+}
+
+// ── raw items → 정제된 형식 ──────────────────────────────────
+function _formatItems(rawItems) {
+  return rawItems.map(item => ({
+    title:     _cleanTitle(item.title || ''),
+    link:      item.link || '#',
+    desc:      _cleanHtml(item.description || '').slice(0, 130),
+    date:      (item.pubDate || '').slice(0, 10),
+    category:  _category(item.title || ''),
+    sentiment: _sentiment(item.title || '')
+  }));
+}
+
+// ── 3중 프록시 순차 시도 ──────────────────────────────────────
+async function _fetchRSS(setStatus) {
+  const enc = encodeURIComponent(_RSS_URL);
+
+  // ① rss2json.com (JSON 직접 반환)
+  setStatus('⟳ [1/3] rss2json.com 시도 중...');
+  try {
+    const r = await fetch(`https://api.rss2json.com/v1/api.json?rss_url=${enc}&count=25`,
+      { signal: AbortSignal.timeout(8000) });
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+    const d = await r.json();
+    if (d.status !== 'ok' || !d.items?.length) throw new Error(`응답 오류: ${d.message||d.status}`);
+    return _formatItems(d.items);
+  } catch(e) { console.warn('[rss2json]', e.message); }
+
+  // ② corsproxy.io (RSS XML 반환)
+  setStatus('⟳ [2/3] corsproxy.io 시도 중...');
+  try {
+    const r = await fetch(`https://corsproxy.io/?url=${enc}`,
+      { signal: AbortSignal.timeout(8000) });
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+    const xml = await r.text();
+    const items = _parseRSSXML(xml);
+    if (!items.length) throw new Error('빈 응답');
+    return _formatItems(items);
+  } catch(e) { console.warn('[corsproxy]', e.message); }
+
+  // ③ allorigins.win (RSS XML 반환)
+  setStatus('⟳ [3/3] allorigins.win 시도 중...');
+  try {
+    const r = await fetch(`https://api.allorigins.win/raw?url=${enc}`,
+      { signal: AbortSignal.timeout(10000) });
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+    const xml = await r.text();
+    const items = _parseRSSXML(xml);
+    if (!items.length) throw new Error('빈 응답');
+    return _formatItems(items);
+  } catch(e) { console.warn('[allorigins]', e.message); }
+
+  throw new Error('rss2json · corsproxy · allorigins 모두 실패');
+}
+
 // ── Claude API 호출 ──────────────────────────────────────────
 async function _callClaude(items, apiKey) {
   const list = items.slice(0, 20).map((item, i) =>
     `${i+1}. [${item.date}] ${item.title}`).join('\n');
-
-  const resp = await fetch(_CLAUDE, {
+  const r = await fetch(_CLAUDE, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -3728,13 +3786,9 @@ ${list}
       }]
     })
   });
-
-  if (!resp.ok) {
-    const errText = await resp.text().catch(()=>'');
-    throw new Error(`Claude API ${resp.status}: ${errText.slice(0,100)}`);
-  }
-  const data = await resp.json();
-  const text = data.content?.find(b => b.type==='text')?.text || '';
+  if (!r.ok) throw new Error(`Claude API ${r.status}`);
+  const d = await r.json();
+  const text = d.content?.find(b=>b.type==='text')?.text || '';
   return JSON.parse(text.replace(/```json|```/g,'').trim());
 }
 
@@ -3770,7 +3824,7 @@ async function renderNews() {
   const icon  = document.getElementById('refresh-icon');
   const dot   = document.getElementById('ai-dot');
 
-  grid.innerHTML = `<div class="news-loading"><span class="spin">⟳</span> Google News에서 NH투자증권 최신 뉴스를 가져오는 중...</div>`;
+  grid.innerHTML = `<div class="news-loading"><span class="spin">⟳</span> Google News 뉴스를 가져오는 중...</div>`;
   sumEl.textContent = '';
   _setNewsStatus('');
   if (btn)  btn.disabled = true;
@@ -3779,100 +3833,67 @@ async function renderNews() {
 
   let items = [];
 
-  // ── STEP 1: Google News RSS 수집 ──────────────────────────
+  // STEP 1: RSS 수집 (3중 프록시)
   try {
-    const resp = await fetch(_RSS_API, { signal: AbortSignal.timeout(9000) });
-    if (!resp.ok) throw new Error('HTTP ' + resp.status);
-    const data = await resp.json();
-    if (data.status !== 'ok' || !data.items?.length) throw new Error('RSS 응답 오류');
-
-    items = data.items.map(item => ({
-      title:     _cleanTitle(item.title),
-      link:      item.link || '#',
-      desc:      _cleanHtml(item.description).slice(0, 130),
-      date:      (item.pubDate || '').slice(0, 10),
-      category:  _category(item.title),
-      sentiment: _sentiment(item.title)
-    }));
-
+    items = await _fetchRSS(msg => _setNewsStatus(
+      `<span style="color:var(--gold)">●</span> ${msg}`));
   } catch(rssErr) {
-    console.warn('[RSS]', rssErr.message);
-    // RSS 실패 시 내장 데이터 폴백
-    items = (D.news?.items || []).map(i => ({
-      title: i.title||'', link: i.link||'#', desc: i.desc||'',
-      date: i.date||'', category: i.category||'기타', sentiment: i.sentiment||'neutral'
+    console.warn('[RSS All Failed]', rssErr.message);
+    items = (D.news?.items||[]).map(i=>({
+      title:i.title||'', link:i.link||'#', desc:i.desc||'',
+      date:i.date||'', category:i.category||'기타', sentiment:i.sentiment||'neutral'
     }));
-    _setNewsStatus(`<span style="color:var(--neu)">●</span> RSS 로드 실패 — 내장 데이터 표시 중 <small>(${rssErr.message})</small>`);
+    _setNewsStatus(`<span style="color:var(--neg)">●</span> RSS 로드 실패 — 내장 데이터 표시 중 <small>(${rssErr.message})</small>`);
     if (dot) dot.className = 'ai-dot error';
     sumEl.textContent = D.news?.summary || '';
-    grid.innerHTML = items.length ? items.map(_newsCardHTML).join('') : `<div class="news-loading">뉴스를 불러오지 못했습니다.</div>`;
+    grid.innerHTML = items.length
+      ? items.map((item,i)=>_newsCardHTML(item,i)).join('')
+      : `<div class="news-loading">뉴스를 불러오지 못했습니다.</div>`;
     _newsFetched = true;
-    if (btn) btn.disabled = false;
+    if (btn)  btn.disabled = false;
     if (icon) icon.textContent = '🔄';
     return;
   }
 
-  // ── STEP 2: Claude API 분석 (키가 있을 때) ────────────────
+  // STEP 2: Claude API 분석 (키가 있을 때)
   const apiKey = _getKey();
   let   summary = D.news?.summary || '';
 
   if (apiKey && items.length) {
-    _setNewsStatus(`<span class="spin" style="font-size:13px">⟳</span> Claude AI가 ${items.length}건의 뉴스를 분석하는 중...`);
-
+    _setNewsStatus(`<span class="spin" style="font-size:13px">⟳</span> Claude AI가 ${items.length}건 분석 중...`);
     try {
       const ai = await _callClaude(items, apiKey);
-
-      // AI 결과 병합
       if (ai.summary) summary = ai.summary;
-      (ai.items || []).forEach(a => {
-        const idx = a.index - 1;
-        if (items[idx]) {
-          items[idx].category  = a.category  || items[idx].category;
-          items[idx].sentiment = a.sentiment || items[idx].sentiment;
-          if (a.desc) items[idx].desc = a.desc;
+      (ai.items||[]).forEach(a => {
+        const i = a.index - 1;
+        if (items[i]) {
+          items[i].category  = a.category  || items[i].category;
+          items[i].sentiment = a.sentiment || items[i].sentiment;
+          if (a.desc) items[i].desc = a.desc;
         }
       });
-
       if (dot) dot.className = 'ai-dot on';
-      _setNewsStatus(`
-        <span style="color:#009B77">●</span>
-        Claude AI 분석 완료 · Google News ${items.length}건 · ${new Date().toLocaleTimeString('ko-KR')} 기준
-      `);
-
+      _setNewsStatus(`<span style="color:#009B77">●</span> Claude AI 분석 완료 · Google News ${items.length}건 · ${new Date().toLocaleTimeString('ko-KR')} 기준`);
     } catch(aiErr) {
       console.warn('[Claude]', aiErr.message);
       if (dot) dot.className = 'ai-dot error';
-      _setNewsStatus(`
-        <span style="color:var(--gold)">●</span>
-        Claude AI 오류 — RSS 자동 분류로 표시 중
-        <small style="margin-left:4px;opacity:.65">(${aiErr.message.slice(0,60)})</small>
-      `);
+      _setNewsStatus(`<span style="color:var(--gold)">●</span> Claude AI 오류 — RSS 자동 분류로 표시 중 <small>(${aiErr.message.slice(0,60)})</small>`);
     }
-
   } else {
-    // Claude 없이 RSS만
     if (dot) dot.className = 'ai-dot off';
-    _setNewsStatus(`
-      <span style="color:#00B4D8">●</span>
-      Google News 실시간 · ${items.length}건 · ${new Date().toLocaleTimeString('ko-KR')} 기준
-      <span style="margin-left:8px;opacity:.6">(Claude AI 미연동)</span>
-    `);
+    _setNewsStatus(`<span style="color:#00B4D8">●</span> Google News 실시간 · ${items.length}건 · ${new Date().toLocaleTimeString('ko-KR')} 기준 <span style="opacity:.6;margin-left:6px">(Claude AI 미연동)</span>`);
   }
 
-  // ── STEP 3: 렌더링 ────────────────────────────────────────
+  // STEP 3: 렌더링
   if (summary) sumEl.textContent = summary;
-  grid.innerHTML = items.map((item, i) => _newsCardHTML(item, i)).join('');
+  grid.innerHTML = items.map((item,i) => _newsCardHTML(item,i)).join('');
   _newsFetched = true;
-
   if (btn)  btn.disabled = false;
   if (icon) icon.textContent = '🔄';
 }
 
 // 강제 새로고침
-async function refreshNews() {
-  _newsFetched = false;
-  await renderNews();
-}
+async function refreshNews() { _newsFetched = false; await renderNews(); }
 
 // ── 탭 전환 ────────────────────────────────────────────────────
 function switchTab(id, btn) {
