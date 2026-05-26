@@ -6,6 +6,8 @@
 <title>NH투자증권 주식 리포트 2026</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700;900&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/hammerjs@2.0.8/hammer.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.0.1/dist/chartjs-plugin-zoom.min.js"></script>
 <style>
 :root{
   --nh:#0D2B3E; --nh2:#1A4560; --nh3:#2E6A8A;
@@ -244,6 +246,16 @@ a{color:inherit;text-decoration:none}
 .news-link-icon{font-size:11px;color:var(--t3);padding:4px 6px;border:1px solid var(--border);border-radius:4px;align-self:flex-start;flex-shrink:0;margin-top:2px;transition:all .15s;white-space:nowrap}
 .news-card:hover .news-link-icon{border-color:var(--nh);color:var(--nh)}
 
+/* ── 줌 초기화 버튼 ── */
+.zoom-reset-btn{
+  padding:5px 12px;border:1px solid var(--border);
+  background:var(--card);color:var(--t2);border-radius:var(--rsm);
+  cursor:pointer;font-size:12px;font-family:'Noto Sans KR',sans-serif;
+  transition:all .2s;white-space:nowrap;display:none;
+}
+.zoom-reset-btn.visible{display:inline-flex;align-items:center;gap:4px}
+.zoom-reset-btn:hover{border-color:var(--nh);color:var(--nh);background:#EEF6FF}
+
 /* ── 면책 ── */
 .disclaimer{font-size:11.5px;color:var(--t3);padding:20px 0;border-top:1px solid var(--border);text-align:center;line-height:1.8;margin-top:20px}
 
@@ -326,6 +338,7 @@ a{color:inherit;text-decoration:none}
           </div>
         </div>
         <div class="ctrl-right">
+          <button class="zoom-reset-btn" id="zoom-reset-btn" onclick="resetZoom()">↺ 줌 초기화</button>
           <div class="btn-group" id="period-btns">
             <button class="btn-g active" onclick="setPeriod('일',this)">일</button>
             <button class="btn-g" onclick="setPeriod('주',this)">주</button>
@@ -3303,57 +3316,212 @@ function getOHLCV(period){
 const state = { type:'line', period:'일' };
 let lineChart=null, candleInst=null;
 
-// ── CandleChart ───────────────────────────────────────────────
+// ── CandleChart (줌·패닝 지원) ───────────────────────────────
 class CandleChart {
-  constructor(cv){this.cv=cv;this.ctx=cv.getContext('2d');this.data=[];this._hov=null;this._mm=this._onMM.bind(this);this._ml=this._onML.bind(this);cv.addEventListener('mousemove',this._mm);cv.addEventListener('mouseleave',this._ml)}
-  setData(data){this.data=data;this._hov=null;this._draw()}
-  destroy(){this.cv.removeEventListener('mousemove',this._mm);this.cv.removeEventListener('mouseleave',this._ml);this.ctx.clearRect(0,0,this.cv.width,this.cv.height)}
-  _draw(){
-    const{cv,ctx,data,_hov}=this;if(!data.length)return;
-    const rect=cv.getBoundingClientRect(),dpr=window.devicePixelRatio||1,W=rect.width,H=rect.height;
-    if(cv.width!==Math.round(W*dpr)){cv.width=Math.round(W*dpr);cv.height=Math.round(H*dpr);ctx.scale(dpr,dpr)}
-    const P={t:20,r:10,b:36,l:76},cW=W-P.l-P.r,cH=H-P.t-P.b;
-    const maxP=Math.max(...data.map(d=>d.h)),minP=Math.min(...data.map(d=>d.l)),span=maxP-minP||1;
-    const pH=maxP+span*.06,pL=minP-span*.06,tot=pH-pL;
-    const toX=i=>P.l+(i+.5)*(cW/data.length),toY=p=>P.t+cH*(1-(p-pL)/tot);
-    const cw=Math.max(2,Math.min(14,cW/data.length*.62));
-    ctx.clearRect(0,0,W,H);
-    // Grid
-    ctx.strokeStyle=GRID;ctx.lineWidth=1;ctx.font=`11px 'Noto Sans KR',sans-serif`;ctx.fillStyle='#7A96A8';ctx.textAlign='right';
-    for(let g=0;g<=5;g++){const p=pL+tot*(g/5),y=toY(p);ctx.beginPath();ctx.moveTo(P.l,y);ctx.lineTo(W-P.r,y);ctx.stroke();ctx.fillText(Math.round(p).toLocaleString('ko-KR'),P.l-6,y+4)}
-    const ev=Math.max(1,Math.ceil(data.length/8));ctx.textAlign='center';
-    data.forEach((d,i)=>{if(i%ev===0||i===data.length-1)ctx.fillText(d.d,toX(i),H-P.b+16)});
-    // Candles
-    data.forEach((d,i)=>{
-      const x=toX(i),isUp=d.c>=d.o,color=isUp?'#D42020':'#1A5FD4',bw=i===_hov?cw*1.2:cw;
-      ctx.strokeStyle=color;ctx.lineWidth=Math.max(1,bw*.15);ctx.beginPath();ctx.moveTo(x,toY(d.h));ctx.lineTo(x,toY(d.l));ctx.stroke();
-      const yT=toY(Math.max(d.o,d.c)),yB=toY(Math.min(d.o,d.c)),bh=Math.max(1.5,yB-yT);
-      ctx.fillStyle=color;ctx.fillRect(x-bw/2,yT,bw,bh);
+  constructor(cv) {
+    this.cv  = cv; this.ctx = cv.getContext('2d');
+    this.data = [];
+    this._hov = null;
+    this._vStart = 0; this._vLen = null; // 뷰포트
+    this._drag = null;                   // 드래그 상태
+
+    this._mm  = this._onMM.bind(this);
+    this._ml  = this._onML.bind(this);
+    this._wh  = this._onWh.bind(this);
+    this._md  = this._onMD.bind(this);
+    this._mu  = this._onMU.bind(this);
+    cv.addEventListener('mousemove',  this._mm);
+    cv.addEventListener('mouseleave', this._ml);
+    cv.addEventListener('wheel',      this._wh, { passive: false });
+    cv.addEventListener('mousedown',  this._md);
+    cv.addEventListener('mouseup',    this._mu);
+    cv.addEventListener('mouseleave', this._mu);
+    cv.style.cursor = 'crosshair';
+  }
+
+  setData(data) {
+    this.data = data; this._hov = null;
+    this._vStart = 0; this._vLen = null;
+    this._showResetBtn(false);
+    this._draw();
+  }
+
+  resetZoom() {
+    this._vStart = 0; this._vLen = null;
+    this._hov = null; this._showResetBtn(false);
+    this._draw();
+  }
+
+  _getView() {
+    const n = this.data.length;
+    const len = Math.min(n, this._vLen ?? n);
+    const start = Math.max(0, Math.min(this._vStart, n - len));
+    return { start, len, data: this.data.slice(start, start + len) };
+  }
+
+  _showResetBtn(show) {
+    const btn = document.getElementById('zoom-reset-btn');
+    if (btn) btn.classList.toggle('visible', show);
+  }
+
+  _onWh(e) {
+    e.preventDefault();
+    const n = this.data.length;
+    const { len: curLen } = this._getView();
+    const factor = e.deltaY > 0 ? 1.15 : 0.87; // 아래=줌아웃, 위=줌인
+    const newLen = Math.round(Math.max(5, Math.min(n, curLen * factor)));
+    if (newLen === n) { this._vStart = 0; this._vLen = null; this._showResetBtn(false); this._draw(); return; }
+
+    // 마우스 위치 기준으로 중심 유지
+    const rect = this.cv.getBoundingClientRect();
+    const cW = rect.width - 76 - 10;
+    const rel = Math.max(0, Math.min(1, (e.clientX - rect.left - 76) / cW));
+    const pivot = this._vStart + Math.round(rel * curLen);
+    const newStart = Math.max(0, Math.min(n - newLen, Math.round(pivot - rel * newLen)));
+
+    this._vStart = newStart; this._vLen = newLen;
+    this._hov = null; this._showResetBtn(true); this._draw();
+  }
+
+  _onMD(e) {
+    if (e.button !== 0) return;
+    this._drag = { x: e.clientX, vStart: this._vStart };
+    this.cv.style.cursor = 'grabbing';
+  }
+
+  _onMU() {
+    this._drag = null;
+    this.cv.style.cursor = 'crosshair';
+  }
+
+  _onMM(e) {
+    // 드래그 패닝
+    if (this._drag) {
+      const n = this.data.length;
+      const { len } = this._getView();
+      if (len >= n) return;
+      const rect = this.cv.getBoundingClientRect();
+      const cW = rect.width - 76 - 10;
+      const dx = e.clientX - this._drag.x;
+      const shift = Math.round(-dx / cW * len);
+      this._vStart = Math.max(0, Math.min(n - len, this._drag.vStart + shift));
+      this._hov = null; this._draw(); return;
+    }
+    // 호버
+    const { data: vd } = this._getView();
+    if (!vd.length) return;
+    const rect = this.cv.getBoundingClientRect();
+    const mx = e.clientX - rect.left;
+    const cW = rect.width - 76 - 10;
+    const step = cW / vd.length;
+    const i = Math.round((mx - 76) / step - 0.5);
+    const cl = Math.max(0, Math.min(vd.length - 1, i));
+    this._hov = Math.abs(mx - (76 + (cl + 0.5) * step)) < step ? cl : null;
+    this._draw();
+  }
+
+  _onML() { this._drag = null; this._hov = null; this.cv.style.cursor = 'crosshair'; this._draw(); }
+
+  destroy() {
+    ['mousemove','mouseleave','wheel','mousedown','mouseup'].forEach(ev => {
+      this.cv.removeEventListener(ev, this[`_${ev.replace('mouse','m').replace('over','').slice(0,2)}`]);
     });
+    this.cv.removeEventListener('mousemove',  this._mm);
+    this.cv.removeEventListener('mouseleave', this._ml);
+    this.cv.removeEventListener('wheel',      this._wh);
+    this.cv.removeEventListener('mousedown',  this._md);
+    this.cv.removeEventListener('mouseup',    this._mu);
+    this.ctx.clearRect(0, 0, this.cv.width, this.cv.height);
+  }
+
+  _draw() {
+    const { cv, ctx, _hov } = this;
+    const { data: vd } = this._getView();
+    if (!vd.length) return;
+
+    const rect = cv.getBoundingClientRect(), dpr = window.devicePixelRatio || 1;
+    const W = rect.width, H = rect.height;
+    if (cv.width !== Math.round(W*dpr)) { cv.width=Math.round(W*dpr); cv.height=Math.round(H*dpr); ctx.scale(dpr,dpr); }
+
+    const P={t:20,r:10,b:36,l:76}, cW=W-P.l-P.r, cH=H-P.t-P.b;
+    const maxP=Math.max(...vd.map(d=>d.h)), minP=Math.min(...vd.map(d=>d.l)), span=maxP-minP||1;
+    const pH=maxP+span*.06, pL=minP-span*.06, tot=pH-pL;
+    const toX=i=>P.l+(i+.5)*(cW/vd.length);
+    const toY=p=>P.t+cH*(1-(p-pL)/tot);
+    const cw=Math.max(2, Math.min(14, cW/vd.length*.62));
+    ctx.clearRect(0,0,W,H);
+
+    // Grid
+    ctx.strokeStyle=GRID; ctx.lineWidth=1;
+    ctx.font=`11px 'Noto Sans KR',sans-serif`; ctx.fillStyle='#7A96A8'; ctx.textAlign='right';
+    for(let g=0;g<=5;g++){const p=pL+tot*(g/5),y=toY(p);ctx.beginPath();ctx.moveTo(P.l,y);ctx.lineTo(W-P.r,y);ctx.stroke();ctx.fillText(Math.round(p).toLocaleString('ko-KR'),P.l-6,y+4);}
+    const ev=Math.max(1,Math.ceil(vd.length/8));
+    ctx.textAlign='center';
+    vd.forEach((d,i)=>{if(i%ev===0||i===vd.length-1)ctx.fillText(d.d,toX(i),H-P.b+16);});
+
+    // Candles
+    vd.forEach((d,i)=>{
+      const x=toX(i), isUp=d.c>=d.o, color=isUp?'#D42020':'#1A5FD4', bw=i===_hov?cw*1.2:cw;
+      ctx.strokeStyle=color; ctx.lineWidth=Math.max(1,bw*.15);
+      ctx.beginPath(); ctx.moveTo(x,toY(d.h)); ctx.lineTo(x,toY(d.l)); ctx.stroke();
+      const yT=toY(Math.max(d.o,d.c)), yB=toY(Math.min(d.o,d.c)), bh=Math.max(1.5,yB-yT);
+      ctx.fillStyle=color; ctx.fillRect(x-bw/2,yT,bw,bh);
+    });
+
     // Tooltip
-    if(_hov!==null){
-      const d=data[_hov],x=toX(_hov),isUp=d.c>=d.o,chg=d.c-d.o,sign=chg>=0?'+':'',pct=((chg/d.o)*100).toFixed(2);
-      ctx.strokeStyle='rgba(13,43,62,.2)';ctx.lineWidth=1;ctx.setLineDash([4,4]);ctx.beginPath();ctx.moveTo(x,P.t);ctx.lineTo(x,H-P.b);ctx.stroke();ctx.setLineDash([]);
+    if (_hov !== null && vd[_hov]) {
+      const d=vd[_hov], x=toX(_hov), isUp=d.c>=d.o;
+      const chg=d.c-d.o, sign=chg>=0?'+':'', pct=((chg/(d.o||1))*100).toFixed(2);
+      ctx.strokeStyle='rgba(13,43,62,.2)'; ctx.lineWidth=1; ctx.setLineDash([4,4]);
+      ctx.beginPath(); ctx.moveTo(x,P.t); ctx.lineTo(x,H-P.b); ctx.stroke(); ctx.setLineDash([]);
       const lines=[d.d,`시  ${d.o?.toLocaleString('ko-KR')}`,`고  ${d.h?.toLocaleString('ko-KR')}`,`저  ${d.l?.toLocaleString('ko-KR')}`,`종  ${d.c?.toLocaleString('ko-KR')}`,`${sign}${chg?.toLocaleString('ko-KR')} (${sign}${pct}%)`];
-      const bw2=152,bh2=lines.length*18+18;let bx=x+14;if(bx+bw2>W-8)bx=x-bw2-14;const by=P.t+10;
-      ctx.shadowColor='rgba(0,0,0,.18)';ctx.shadowBlur=10;ctx.fillStyle='#0D2B3E';ctx.beginPath();ctx.roundRect(bx,by,bw2,bh2,7);ctx.fill();ctx.shadowBlur=0;
-      ctx.textAlign='left';ctx.font="600 11px 'Noto Sans KR',sans-serif";ctx.fillStyle='#90E0EF';ctx.fillText(lines[0],bx+10,by+17);
-      ctx.font="400 11px 'Noto Sans KR',sans-serif";lines.slice(1,5).forEach((l,li)=>{ctx.fillStyle='#AACCDD';ctx.fillText(l,bx+10,by+17+(li+1)*17)});
-      ctx.fillStyle=isUp?'#FF8080':'#80AAFF';ctx.fillText(lines[5],bx+10,by+17+5*17);
+      const bw2=152, bh2=lines.length*18+18;
+      let bx=x+14; if(bx+bw2>W-8)bx=x-bw2-14;
+      const by=P.t+10;
+      ctx.shadowColor='rgba(0,0,0,.18)'; ctx.shadowBlur=10;
+      ctx.fillStyle='#0D2B3E'; ctx.beginPath(); ctx.roundRect(bx,by,bw2,bh2,7); ctx.fill(); ctx.shadowBlur=0;
+      ctx.textAlign='left'; ctx.font="600 11px 'Noto Sans KR',sans-serif"; ctx.fillStyle='#90E0EF'; ctx.fillText(lines[0],bx+10,by+17);
+      ctx.font="400 11px 'Noto Sans KR',sans-serif";
+      lines.slice(1,5).forEach((l,li)=>{ctx.fillStyle='#AACCDD';ctx.fillText(l,bx+10,by+17+(li+1)*17);});
+      ctx.fillStyle=isUp?'#FF8080':'#80AAFF'; ctx.fillText(lines[5],bx+10,by+17+5*17);
     }
   }
-  _onMM(e){const rect=this.cv.getBoundingClientRect(),mx=e.clientX-rect.left,P={l:76,r:10},cW=rect.width-P.l-P.r,n=this.data.length;if(!n)return;const step=cW/n,i=Math.round((mx-P.l)/step-.5),cl=Math.max(0,Math.min(n-1,i));this._hov=(Math.abs(mx-(P.l+(cl+.5)*step))<step)?cl:null;this._draw()}
-  _onML(){this._hov=null;this._draw()}
 }
 
-// ── 라인 차트 빌더 ────────────────────────────────────────────
 function buildLine(id, ohlcv) {
   const dates=ohlcv.map(d=>d.d), closes=ohlcv.map(d=>d.c);
   const ctx=document.getElementById(id).getContext('2d');
   const trend=closes[closes.length-1]>=closes[0];
   const lc=trend?'#D42020':'#1A5FD4';
   const g=ctx.createLinearGradient(0,0,0,320);g.addColorStop(0,lc+'30');g.addColorStop(1,lc+'00');
-  return new Chart(ctx,{type:'line',data:{labels:dates,datasets:[{label:'NH투자증권',data:closes,borderColor:lc,borderWidth:2,pointRadius:0,pointHoverRadius:5,fill:true,backgroundColor:g,tension:.3}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`  ${fmt(c.parsed.y)}원`}}},scales:{x:{grid:{color:GRID},ticks:{maxTicksLimit:10,font:TICK}},y:{grid:{color:GRID},ticks:{font:TICK,callback:v=>fmt(v)}}}}});
+  return new Chart(ctx,{
+    type:'line',
+    data:{labels:dates,datasets:[{label:'NH투자증권',data:closes,borderColor:lc,borderWidth:2,pointRadius:0,pointHoverRadius:5,fill:true,backgroundColor:g,tension:.3}]},
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{
+        legend:{display:false},
+        tooltip:{callbacks:{label:c=>`  ${fmt(c.parsed.y)}원`}},
+        zoom:{
+          zoom:{
+            wheel:{ enabled:true, speed:0.08 },
+            pinch:{ enabled:true },
+            mode:'x',
+            onZoom(){ document.getElementById('zoom-reset-btn')?.classList.add('visible'); }
+          },
+          pan:{
+            enabled:true, mode:'x',
+            onPan(){ document.getElementById('zoom-reset-btn')?.classList.add('visible'); }
+          },
+          limits:{ x:{ min:'original', max:'original', minRange:5 } }
+        }
+      },
+      scales:{
+        x:{grid:{color:GRID},ticks:{maxTicksLimit:10,font:TICK}},
+        y:{grid:{color:GRID},ticks:{font:TICK,callback:v=>fmt(v)}}
+      }
+    }
+  });
 }
 
 // ── 차트 렌더 ─────────────────────────────────────────────────
@@ -3374,6 +3542,11 @@ function renderMain(){
 }
 function setType(t,btn){state.type=t;document.querySelectorAll('#type-btns .btn-gk').forEach(b=>b.classList.remove('active'));btn.classList.add('active');renderMain()}
 function setPeriod(p,btn){state.period=p;document.querySelectorAll('#period-btns .btn-g').forEach(b=>b.classList.remove('active'));btn.classList.add('active');renderMain()}
+function resetZoom(){
+  if(lineChart)  { lineChart.resetZoom(); }
+  if(candleInst) { candleInst.resetZoom(); }
+  document.getElementById('zoom-reset-btn')?.classList.remove('visible');
+}
 
 // ── 헤더 ─────────────────────────────────────────────────────
 function renderHeader(){
