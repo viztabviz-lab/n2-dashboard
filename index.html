@@ -3583,7 +3583,7 @@ function switchTab(id, btn) {
   if (id === 'fin')     renderFin();
   if (id === 'comp')    renderComp();
   if (id === 'analyst') renderAnalyst();
-  if (id === 'news')    renderNews();   // 비동기 — 최초 1회만 실제 fetch
+  if (id === 'news')    renderNews();
 }
 
 // ── ResizeObserver ────────────────────────────────────────────
@@ -3593,7 +3593,6 @@ new ResizeObserver(() => { if (candleInst) candleInst._draw(); })
 // ── 초기화 ───────────────────────────────────────────────────
 renderHeader();
 renderQuarterlyHL();
-_updateAiStatus();
 renderMain();
 </script>
 </body>
