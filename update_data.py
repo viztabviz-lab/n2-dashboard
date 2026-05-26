@@ -85,15 +85,20 @@ for c in COMPETITORS:
         comp_data.append({**c,"price":0,"change_pct":0,"week52_high":0,"week52_low":0,"mktcap_trillion":0})
 
 # ── 4. Google News RSS ────────────────────────────────────────
+import re as _re
+def _clean_title(t):
+    """제목에서 '- 한국경제' 등 언론사 출처 제거"""
+    return _re.sub(r'\s*[-\u2013|]\s*[^-\u2013|\s][^-\u2013|]{0,25}$', '', (t or '')).strip()
+
 news_items = []
-rss_url = "https://news.google.com/rss/search?q=NH투자증권+주가+증권&hl=ko&gl=KR&ceid=KR:ko"
+rss_url = "https://news.google.com/rss/search?q=NH투자증권+005940&hl=ko&gl=KR&ceid=KR:ko"
 try:
     req = urllib.request.Request(rss_url, headers={"User-Agent":"Mozilla/5.0"})
     with urllib.request.urlopen(req, timeout=10) as resp:
         tree = ET.parse(resp)
     root = tree.getroot(); channel = root.find("channel")
     for item in (channel.findall("item") if channel else [])[:25]:
-        title = item.findtext("title","").strip()
+        title = _clean_title(item.findtext("title","").strip())
         link  = item.findtext("link","").strip()
         desc  = item.findtext("description","").strip()
         pub   = item.findtext("pubDate","").strip()
@@ -112,7 +117,7 @@ except Exception as e:
 # ── 5. Claude API: 뉴스 분류·요약 ────────────────────────────
 try:
     client = anthropic.Anthropic(api_key=os.environ["ANTHROPIC_API_KEY"])
-    news_titles = "\n".join([f"{i+1}. {n['title']} ({n['date']})" for i,n in enumerate(news_items[:25])])
+    news_titles = "\n".join([f"{i+1}. {n['title']} ({n['date']})" for i,n in enumerate(news_items[:30])])
     prompt = f"""
 오늘({date_label}) NH투자증권(005940) 관련 뉴스 목록입니다.
 아래 JSON 형식으로만 응답하세요 (코드블록, 설명 없이).
@@ -204,7 +209,7 @@ dashboard_data = {
     "chart": {"dates":[d["d"] for d in ohlcv_daily], "prices":[d["c"] for d in ohlcv_daily]},
     "ohlcv": ohlcv_daily, "ohlcv_yearly": ohlcv_yearly,
     # 뉴스
-    "news": {"summary": news_summary, "items": news_items[:25]}
+    "news": {"summary": news_summary, "items": news_items[:30]}
 }
 
 # ── 7. index.html 갱신 ────────────────────────────────────────
