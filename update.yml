@@ -1,41 +1,291 @@
-name: NH투자증권 Dashboard Update
+"""
+NH투자증권(005940) 대시보드 자동 업데이트
+- pykrx: 일봉(1년) + 월봉(5년) + 경쟁사 시세
+- Google News RSS: 뉴스 링크 수집
+- Claude API: 뉴스 카테고리·요약
+"""
 
-on:
-  schedule:
-    # 평일 오후 4:30 KST (UTC 07:30)
-    - cron: '30 7 * * 1-5'
-  workflow_dispatch:
+import json, re, os, sys, urllib.request, xml.etree.ElementTree as ET
+from datetime import datetime, timedelta, timezone
+import anthropic
+from pykrx import stock
 
-permissions:
-  contents: write
+# ── 한국 시간 기준 ────────────────────────────────────────────
+KST = timezone(timedelta(hours=9))
+today = datetime.now(KST)
+today_str  = today.strftime("%Y%m%d")
+date_label = today.strftime("%Y년 %m월 %d일")
+start_1y   = (today - timedelta(days=400)).strftime("%Y%m%d")
+start_5y   = (today - timedelta(days=365*5+30)).strftime("%Y%m%d")
 
-jobs:
-  update-dashboard:
-    runs-on: ubuntu-latest
+TICKER             = "005940"
+COMPANY_NAME       = "NH투자증권"
+SHARES_OUTSTANDING = 367_542_536
 
-    steps:
-      - name: 📥 Checkout repository
-        uses: actions/checkout@v4
+print(f"[{COMPANY_NAME}] 업데이트 시작: {date_label} (KST)")
 
-      - name: 🐍 Set up Python 3.11
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
+# ── 1. 일봉 OHLCV (1년) ──────────────────────────────────────
+try:
+    df = stock.get_market_ohlcv_by_date(start_1y, today_str, TICKER)
+    df = df.dropna()
 
-      - name: 📦 Install dependencies
-        run: |
-          pip install --upgrade pip
-          pip install pykrx anthropic
+    # 당일 데이터가 없으면 전 거래일로 폴백 (주말·공휴일 대응)
+    if df.empty:
+        for days_back in range(1, 8):
+            fallback = (today - timedelta(days=days_back)).strftime("%Y%m%d")
+            df = stock.get_market_ohlcv_by_date(start_1y, fallback, TICKER).dropna()
+            if not df.empty:
+                print(f"  폴백: {fallback} 기준 데이터 사용")
+                break
 
-      - name: 📊 Run data update script
-        env:
-          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-        run: python update_data.py
+    if df.empty:
+        raise ValueError("거래 데이터 없음")
 
-      - name: 💾 Commit & Push updated index.html
-        run: |
-          git config --local user.email "github-actions[bot]@users.noreply.github.com"
-          git config --local user.name "github-actions[bot]"
-          git add index.html
-          git diff --staged --quiet || git commit -m "📈 Auto-update: NH투자증권 $(date '+%Y-%m-%d %H:%M KST')"
-          git push
+    latest = df.iloc[-1]
+    prev   = df.iloc[-2] if len(df) >= 2 else latest
+
+    current_price    = int(latest["종가"])
+    prev_close       = int(prev["종가"])
+    price_change     = current_price - prev_close
+    price_change_pct = round((price_change / prev_close) * 100, 2)
+    volume           = int(latest["거래량"])
+    open_p  = int(latest["시가"])
+    high_p  = int(latest["고가"])
+    low_p   = int(latest["저가"])
+    mktcap_trillion  = round(current_price * SHARES_OUTSTANDING / 1e12, 2)
+    week52_high = int(df["고가"].max())
+    week52_low  = int(df["저가"].min())
+
+    ohlcv_daily = [{
+        "fullDate": d.strftime("%Y-%m-%d"),
+        "d":        d.strftime("%m/%d"),
+        "o": int(r["시가"]), "h": int(r["고가"]),
+        "l": int(r["저가"]), "c": int(r["종가"]),
+        "v": int(r["거래량"])
+    } for d, r in df.iterrows()]
+
+    print(f"  일봉: {len(ohlcv_daily)}일 | {current_price:,}원 ({price_change_pct:+.2f}%)")
+
+except Exception as e:
+    print(f"[ERROR] 일봉 수집 실패: {e}")
+    sys.exit(1)
+
+# ── 2. 월봉 OHLCV (5년) ──────────────────────────────────────
+ohlcv_yearly = []
+try:
+    df5 = stock.get_market_ohlcv_by_date(start_5y, today_str, TICKER).dropna()
+
+    # pandas 버전 호환 (2.2+ = "ME", 구버전 = "M")
+    try:
+        dfm = df5.resample("ME").agg({
+            "시가":"first","고가":"max","저가":"min","종가":"last","거래량":"sum"
+        }).dropna()
+    except Exception:
+        dfm = df5.resample("M").agg({
+            "시가":"first","고가":"max","저가":"min","종가":"last","거래량":"sum"
+        }).dropna()
+
+    ohlcv_yearly = [{
+        "fullDate": d.strftime("%Y-%m"),
+        "d":        d.strftime("%Y/%m"),
+        "o": int(r["시가"]), "h": int(r["고가"]),
+        "l": int(r["저가"]), "c": int(r["종가"]),
+        "v": int(r["거래량"])
+    } for d, r in dfm.iterrows()]
+    print(f"  월봉: {len(ohlcv_yearly)}개월")
+
+except Exception as e:
+    print(f"  [WARN] 월봉 수집 실패: {e}")
+
+# ── 3. 경쟁사 현재가 ──────────────────────────────────────────
+COMPETITORS = [
+    # 발행주식수: KIND 공시 기준 (시총/현재가로 역산 검증)
+    {"ticker":"006800","name":"미래에셋증권","color":"#E8372C","shares":215_000_000},   # 시총 ~15조
+    {"ticker":"016360","name":"삼성증권",    "color":"#0076CE","shares": 89_000_000},   # 시총 ~9.9조
+    {"ticker":"039490","name":"키움증권",    "color":"#FF6600","shares": 37_000_000},   # 시총 ~17조
+    {"ticker":"071050","name":"한국금융지주","color":"#005BAC","shares": 60_000_000},   # 030610(교보증권) → 071050(한국금융지주) 수정
+]
+comp_data = []
+for c in COMPETITORS:
+    try:
+        start_c = (today - timedelta(days=10)).strftime("%Y%m%d")
+        df_c = stock.get_market_ohlcv_by_date(start_c, today_str, c["ticker"]).dropna()
+        if not df_c.empty:
+            price  = int(df_c.iloc[-1]["종가"])
+            prev_c = int(df_c.iloc[-2]["종가"]) if len(df_c) >= 2 else price
+            chg    = round((price - prev_c) / prev_c * 100, 2)
+            mc     = round(price * c["shares"] / 1e12, 2)
+            comp_data.append({
+                **c,
+                "price": price, "change_pct": chg,
+                "week52_high": int(df_c["고가"].max()),
+                "week52_low":  int(df_c["저가"].min()),
+                "mktcap_trillion": mc
+            })
+            print(f"  경쟁사 {c['name']}: {price:,}원 ({chg:+.2f}%)")
+        else:
+            raise ValueError("빈 데이터")
+    except Exception as e:
+        print(f"  [WARN] {c['name']}: {e}")
+        comp_data.append({
+            **c, "price":0,"change_pct":0,
+            "week52_high":0,"week52_low":0,"mktcap_trillion":0
+        })
+
+# ── 4. Google News RSS ────────────────────────────────────────
+def _clean_title(t):
+    return re.sub(r'\s*[-–|]\s*[^-–|\s][^-–|]{0,25}$', '', (t or '')).strip()
+
+news_items = []
+rss_url = "https://news.google.com/rss/search?q=NH투자증권+005940&hl=ko&gl=KR&ceid=KR:ko"
+try:
+    req = urllib.request.Request(rss_url, headers={"User-Agent":"Mozilla/5.0"})
+    with urllib.request.urlopen(req, timeout=15) as resp:
+        tree = ET.parse(resp)
+    root = tree.getroot()
+    channel = root.find("channel")
+    for item in (channel.findall("item") if channel else [])[:30]:
+        title = _clean_title(item.findtext("title", "").strip())
+        link  = item.findtext("link", "").strip()
+        desc  = item.findtext("description", "").strip()
+        pub   = item.findtext("pubDate", "").strip()
+        try:
+            from email.utils import parsedate_to_datetime
+            pub_str = parsedate_to_datetime(pub).strftime("%Y-%m-%d")
+        except Exception:
+            pub_str = pub[:10] if len(pub) >= 10 else pub
+        desc = re.sub(r"<[^>]+>", "", desc).strip()[:120]
+        news_items.append({
+            "title": title, "link": link, "desc": desc,
+            "date": pub_str, "category": "", "sentiment": "neutral"
+        })
+    print(f"  뉴스: {len(news_items)}건 수집")
+except Exception as e:
+    print(f"  [WARN] RSS 수집 실패: {e}")
+
+# ── 5. Claude API: 뉴스 분류·요약 ────────────────────────────
+news_summary = f"{date_label} 기준 NH투자증권 시황 요약입니다."
+try:
+    client = anthropic.Anthropic(api_key=os.environ["ANTHROPIC_API_KEY"])
+    news_titles = "\n".join([
+        f"{i+1}. {n['title']} ({n['date']})"
+        for i, n in enumerate(news_items[:30])
+    ])
+    prompt = f"""오늘({date_label}) NH투자증권(005940) 관련 뉴스입니다.
+아래 JSON 형식으로만 응답하세요 (코드블록·설명 없이 순수 JSON).
+
+뉴스 목록:
+{news_titles}
+
+{{
+  "summary": "3문장 이내 핵심 시황 요약 (한국어, 증권 전문가 어조)",
+  "classifications": [
+    {{"index": 1, "category": "카테고리", "sentiment": "positive|neutral|negative", "short_desc": "한 줄 핵심 요약 30자 이내"}},
+    ...
+  ]
+}}
+
+카테고리: 실적·이익, 주가전망, 업황·시황, 금리·채권, 상품·서비스, 주주환원, 인사·조직, IPO·공모, 증권·금융"""
+
+    resp = client.messages.create(
+        model="claude-sonnet-4-6",
+        max_tokens=2000,
+        messages=[{"role": "user", "content": prompt}]
+    )
+    raw = re.sub(r"```json|```", "", resp.content[0].text.strip()).strip()
+    ai  = json.loads(raw)
+    news_summary = ai.get("summary", news_summary)
+    for cls in ai.get("classifications", []):
+        idx = cls["index"] - 1
+        if 0 <= idx < len(news_items):
+            news_items[idx]["category"]  = cls.get("category", "")
+            news_items[idx]["sentiment"] = cls.get("sentiment", "neutral")
+            news_items[idx]["desc"]      = cls.get("short_desc", news_items[idx]["desc"])
+    print(f"  Claude 분류 완료: {news_summary[:40]}...")
+
+except Exception as e:
+    print(f"  [WARN] Claude API 실패: {e}")
+
+# ── 6. 최종 데이터 패키지 ─────────────────────────────────────
+dashboard_data = {
+    "company": COMPANY_NAME,
+    "company_en": "NH Investment & Securities",
+    "ticker": TICKER,
+    "date": date_label,
+    "updated_at": today.strftime("%Y-%m-%d %H:%M KST"),
+    "price": {
+        "current": current_price, "change": price_change,
+        "change_pct": price_change_pct, "open": open_p,
+        "high": high_p, "low": low_p, "prev_close": prev_close
+    },
+    "volume": volume,
+    "market_cap_trillion": mktcap_trillion,
+    "week52": {"high": week52_high, "low": week52_low},
+    "fundamentals": {
+        "eps": 2446, "bps": 30500, "dps": 700,
+        "dividend_yield": round(700 / current_price * 100, 2),
+        "pbr": round(current_price / 30500, 2),
+        "per": round(current_price / 2446, 1),
+        "roe": 14.2, "employees": 3200
+    },
+    "annual": [
+        {"year":"2022","revenue":5.1,"op_income":0.62,"op_margin":12.1},
+        {"year":"2023","revenue":4.8,"op_income":0.45,"op_margin":9.4},
+        {"year":"2024","revenue":6.2,"op_income":0.81,"op_margin":13.1},
+        {"year":"2025","revenue":8.3,"op_income":1.18,"op_margin":14.2},
+    ],
+    "quarterly": [
+        {"q":"2025 Q2","revenue":1.96,"op_income":0.27,"yoy":"+18.7%"},
+        {"q":"2025 Q3","revenue":2.21,"op_income":0.33,"yoy":"+31.2%"},
+        {"q":"2025 Q4","revenue":2.31,"op_income":0.35,"yoy":"+28.4%"},
+        {"q":"2026 Q1","revenue":2.18,"op_income":0.48,"yoy":"+108%"},
+        {"q":"2026 Q2","revenue":0.0,"op_income":0.0,"yoy":"발표 예정"},
+    ],
+    "competitors": comp_data,
+    "analyst": {
+        "consensus": "매수",
+        "counts": {"buy": 12, "neutral": 0, "sell": 0},
+        "target_avg": 42500, "target_high": 44000, "target_low": 37000,
+        "firms": [
+            {"firm":"미래에셋증권","opinion":"매수","target":44000,"note":"IMA 출시·ROE 개선 (2026.05.15)"},
+            {"firm":"키움증권",   "opinion":"매수","target":44000,"note":"목표주가 상향 (2026.04.24)"},
+            {"firm":"삼성증권",   "opinion":"매수","target":41000,"note":"자본시장 호황 수혜 (2026.04.24)"},
+            {"firm":"한국투자증권","opinion":"매수","target":40000,"note":"WM 수익 확대"},
+            {"firm":"신한투자증권","opinion":"매수","target":37000,"note":"보수적 추정"},
+        ]
+    },
+    "chart": {
+        "dates":  [d["d"] for d in ohlcv_daily],
+        "prices": [d["c"] for d in ohlcv_daily]
+    },
+    "ohlcv":        ohlcv_daily,
+    "ohlcv_yearly": ohlcv_yearly,
+    "news": {"summary": news_summary, "items": news_items[:30]}
+}
+
+# ── 7. index.html 갱신 ────────────────────────────────────────
+try:
+    with open("index.html", "r", encoding="utf-8") as f:
+        html = f.read()
+
+    js_block = json.dumps(dashboard_data, ensure_ascii=False, indent=2)
+    new_code  = f"const DASHBOARD_DATA = {js_block};"
+    pattern   = r"const DASHBOARD_DATA = \{[\s\S]*?\};"
+
+    if re.search(pattern, html):
+        html = re.sub(pattern, new_code, html)
+        print("[SUCCESS] index.html 정규식 교체 완료")
+    else:
+        html = html.replace("// __DATA_PLACEHOLDER__", new_code)
+        print("[SUCCESS] index.html 플레이스홀더 교체 완료")
+
+    with open("index.html", "w", encoding="utf-8") as f:
+        f.write(html)
+
+    print(f"  날짜: {date_label}")
+    print(f"  가격: {current_price:,}원 ({price_change_pct:+.2f}%)")
+    print(f"  뉴스: {len(news_items)}건")
+
+except Exception as e:
+    print(f"[ERROR] index.html 업데이트 실패: {e}")
+    sys.exit(1)
