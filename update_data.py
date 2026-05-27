@@ -99,10 +99,11 @@ except Exception as e:
 
 # ── 3. 경쟁사 현재가 ──────────────────────────────────────────
 COMPETITORS = [
-    {"ticker":"006800","name":"미래에셋증권","color":"#E8372C","shares":3_500_000_000},
-    {"ticker":"016360","name":"삼성증권",    "color":"#0076CE","shares":  97_000_000},
-    {"ticker":"039490","name":"키움증권",    "color":"#FF6600","shares":  37_000_000},
-    {"ticker":"030610","name":"한국금융지주","color":"#005BAC","shares":  72_000_000},
+    # 발행주식수: KIND 공시 기준 (시총/현재가로 역산 검증)
+    {"ticker":"006800","name":"미래에셋증권","color":"#E8372C","shares":215_000_000},   # 시총 ~15조
+    {"ticker":"016360","name":"삼성증권",    "color":"#0076CE","shares": 89_000_000},   # 시총 ~9.9조
+    {"ticker":"039490","name":"키움증권",    "color":"#FF6600","shares": 37_000_000},   # 시총 ~17조
+    {"ticker":"071050","name":"한국금융지주","color":"#005BAC","shares": 60_000_000},   # 030610(교보증권) → 071050(한국금융지주) 수정
 ]
 comp_data = []
 for c in COMPETITORS:
@@ -237,8 +238,8 @@ dashboard_data = {
         {"q":"2025 Q2","revenue":1.96,"op_income":0.27,"yoy":"+18.7%"},
         {"q":"2025 Q3","revenue":2.21,"op_income":0.33,"yoy":"+31.2%"},
         {"q":"2025 Q4","revenue":2.31,"op_income":0.35,"yoy":"+28.4%"},
-        {"q":"2026 Q1","revenue":2.18,"op_income":0.48,"yoy":"+108%"},
-        {"q":"2026 Q2","revenue":0.0,"op_income":0.0,"yoy":"발표 예정"},
+        # 2026 Q1 공식발표 (2026.04.23): 영업이익 6,367억(+120.3%), ROE 19.6%
+        {"q":"2026 Q1","revenue":2.77,"op_income":0.64,"yoy":"+120.3%"},
     ],
     "competitors": comp_data,
     "analyst": {
