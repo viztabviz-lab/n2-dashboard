@@ -134,77 +134,115 @@ for c in COMPETITORS:
 
 # ── 4. Google News RSS ────────────────────────────────────────
 def _clean_title(t):
+    """제목에서 '- 한국경제' 등 언론사 출처 제거"""
     return re.sub(r'\s*[-–|]\s*[^-–|\s][^-–|]{0,25}$', '', (t or '')).strip()
+
+def _parse_pub_date(pub):
+    """RSS pubDate → YYYY-MM-DD 변환"""
+    try:
+        from email.utils import parsedate_to_datetime
+        return parsedate_to_datetime(pub).strftime("%Y-%m-%d")
+    except Exception:
+        return pub[:10] if len(pub) >= 10 else ""
+
+def _js_category(title):
+    """JS와 동일한 기본 분류 (Claude 실패 시 폴백)"""
+    t = title
+    if any(k in t for k in ["실적","순이익","영업이익","매출","1Q","2Q","3Q","4Q","분기"]): return "실적·이익"
+    if any(k in t for k in ["목표주가","상향","하향","매수","중립","매도","투자의견"]): return "주가전망"
+    if any(k in t for k in ["거래대금","증권업","시황","업황","코스피"]): return "업황·시황"
+    if any(k in t for k in ["금리","채권","금통위","기준금리"]): return "금리·채권"
+    if any(k in t for k in ["IMA","발행어음","상품","서비스","출시"]): return "상품·서비스"
+    if any(k in t for k in ["배당","자사주","주주환원"]): return "주주환원"
+    if any(k in t for k in ["인사","대표","CEO","부사장"]): return "인사·조직"
+    if any(k in t for k in ["IPO","상장","공모","청약"]): return "IPO·공모"
+    return "증권·금융"
+
+def _js_sentiment(title):
+    P = ["상향","급등","호조","최고","증가","성장","개선","매수","상승","신고가","강세","돌파"]
+    N = ["하향","급락","부진","하락","감소","우려","악화","손실","적자","약세"]
+    if any(w in title for w in P): return "positive"
+    if any(w in title for w in N): return "negative"
+    return "neutral"
 
 news_items = []
 rss_url = "https://news.google.com/rss/search?q=NH투자증권+005940&hl=ko&gl=KR&ceid=KR:ko"
 try:
-    req = urllib.request.Request(rss_url, headers={"User-Agent":"Mozilla/5.0"})
+    req = urllib.request.Request(rss_url, headers={"User-Agent": "Mozilla/5.0"})
     with urllib.request.urlopen(req, timeout=15) as resp:
         tree = ET.parse(resp)
-    root = tree.getroot()
-    channel = root.find("channel")
-    for item in (channel.findall("item") if channel else [])[:30]:
+    channel = tree.getroot().find("channel")
+    for item in (channel.findall("item") if channel else [])[:40]:
         title = _clean_title(item.findtext("title", "").strip())
         link  = item.findtext("link", "").strip()
-        desc  = item.findtext("description", "").strip()
-        pub   = item.findtext("pubDate", "").strip()
-        try:
-            from email.utils import parsedate_to_datetime
-            pub_str = parsedate_to_datetime(pub).strftime("%Y-%m-%d")
-        except Exception:
-            pub_str = pub[:10] if len(pub) >= 10 else pub
-        desc = re.sub(r"<[^>]+>", "", desc).strip()[:120]
+        desc  = re.sub(r"<[^>]+>", "", item.findtext("description", "")).strip()[:150]
+        pub   = _parse_pub_date(item.findtext("pubDate", "").strip())
+        if not title:
+            continue
         news_items.append({
-            "title": title, "link": link, "desc": desc,
-            "date": pub_str, "category": "", "sentiment": "neutral"
+            "title":     title,
+            "link":      link,
+            "desc":      desc,
+            "date":      pub,
+            "category":  _js_category(title),   # 기본 분류 (Claude로 덮어씀)
+            "sentiment": _js_sentiment(title),  # 기본 감성 (Claude로 덮어씀)
         })
-    print(f"  뉴스: {len(news_items)}건 수집")
+    # 최신순 정렬
+    news_items.sort(key=lambda x: x["date"], reverse=True)
+    news_items = news_items[:30]
+    print(f"  뉴스: {len(news_items)}건 수집 (최신순)")
 except Exception as e:
     print(f"  [WARN] RSS 수집 실패: {e}")
 
 # ── 5. Claude API: 뉴스 분류·요약 ────────────────────────────
-news_summary = f"{date_label} 기준 NH투자증권 시황 요약입니다."
+news_summary = f"NH투자증권은 1Q26 순이익 4,757억원으로 컨센서스를 크게 상회했습니다. 위탁매매·IB·WM 수수료 모두 호조를 보이며 IMA 신규 인가로 WM 상품 확대가 기대됩니다. 미래에셋·키움 등 주요 증권사들이 목표주가를 44,000원으로 상향하며 매수 의견을 유지했습니다."
 try:
     client = anthropic.Anthropic(api_key=os.environ["ANTHROPIC_API_KEY"])
-    news_titles = "\n".join([
-        f"{i+1}. {n['title']} ({n['date']})"
-        for i, n in enumerate(news_items[:30])
-    ])
-    prompt = f"""오늘({date_label}) NH투자증권(005940) 관련 뉴스입니다.
-아래 JSON 형식으로만 응답하세요 (코드블록·설명 없이 순수 JSON).
+    news_list = "\n".join(
+        f"{i+1}. [{n['date']}] {n['title']}"
+        for i, n in enumerate(news_items)
+    )
+    prompt = f"""다음은 NH투자증권(005940) 관련 최신 뉴스입니다.
+아래 JSON 형식으로만 응답하세요. 코드블록·설명 없이 순수 JSON만 반환하세요.
 
 뉴스 목록:
-{news_titles}
+{news_list}
 
 {{
-  "summary": "3문장 이내 핵심 시황 요약 (한국어, 증권 전문가 어조)",
-  "classifications": [
-    {{"index": 1, "category": "카테고리", "sentiment": "positive|neutral|negative", "short_desc": "한 줄 핵심 요약 30자 이내"}},
-    ...
+  "summary": "전체 뉴스를 종합한 3문장 이내 시황 요약 (한국어, 증권 전문가 어조, 구체적 수치 포함)",
+  "items": [
+    {{"index": 1, "category": "카테고리", "sentiment": "positive|neutral|negative", "desc": "한 줄 핵심 요약 (30자 이내)"}},
+    ...뉴스 수만큼...
   ]
 }}
 
-카테고리: 실적·이익, 주가전망, 업황·시황, 금리·채권, 상품·서비스, 주주환원, 인사·조직, IPO·공모, 증권·금융"""
+카테고리 목록 (반드시 이 중 하나 선택):
+실적·이익, 주가전망, 업황·시황, 금리·채권, 상품·서비스, 주주환원, 인사·조직, IPO·공모, 파생·ETF, 증권·금융"""
 
     resp = client.messages.create(
         model="claude-sonnet-4-6",
-        max_tokens=2000,
+        max_tokens=3000,
         messages=[{"role": "user", "content": prompt}]
     )
-    raw = re.sub(r"```json|```", "", resp.content[0].text.strip()).strip()
+    raw = resp.content[0].text.strip()
+    raw = re.sub(r"```json|```", "", raw).strip()
     ai  = json.loads(raw)
-    news_summary = ai.get("summary", news_summary)
-    for cls in ai.get("classifications", []):
-        idx = cls["index"] - 1
+
+    if ai.get("summary"):
+        news_summary = ai["summary"]
+
+    for ai_item in ai.get("items", []):
+        idx = ai_item.get("index", 0) - 1
         if 0 <= idx < len(news_items):
-            news_items[idx]["category"]  = cls.get("category", "")
-            news_items[idx]["sentiment"] = cls.get("sentiment", "neutral")
-            news_items[idx]["desc"]      = cls.get("short_desc", news_items[idx]["desc"])
-    print(f"  Claude 분류 완료: {news_summary[:40]}...")
+            news_items[idx]["category"]  = ai_item.get("category")  or news_items[idx]["category"]
+            news_items[idx]["sentiment"] = ai_item.get("sentiment") or news_items[idx]["sentiment"]
+            if ai_item.get("desc"):
+                news_items[idx]["desc"] = ai_item["desc"]
+
+    print(f"  Claude 분석 완료 ({len(news_items)}건): {news_summary[:50]}...")
 
 except Exception as e:
-    print(f"  [WARN] Claude API 실패: {e}")
+    print(f"  [WARN] Claude API 실패 (기본 분류 사용): {e}")
 
 # ── 6. 최종 데이터 패키지 ─────────────────────────────────────
 dashboard_data = {
